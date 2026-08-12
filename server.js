@@ -21,13 +21,13 @@ const mimeTypes = {
 };
 
 const seedRecord = {
-  fullName: "Ada Okafor",
+  fullName: "Olena Shevchenko",
   idNumber: "ID-0001",
   documentType: "Passport",
-  country: "Nigeria",
+  country: "Ukraine",
   dob: "1998-01-14",
   expiry: "2028-08-12",
-  address: "Lagos, Nigeria",
+  address: "Kyiv, Ukraine",
   photoUrl: "",
   status: "Verified"
 };

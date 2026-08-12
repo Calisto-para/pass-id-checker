@@ -208,8 +208,7 @@ async function loadState() {
     renderRecord(initial);
     setAuthState(Boolean(session.authenticated));
   } else {
-    renderRecord(initial);
-    showResult(initial);
+    showResult(null);
     initClientLookup();
     syncRequestedId();
   }
@@ -221,6 +220,9 @@ function setAuthState(authenticated) {
   els.authNote.textContent = authenticated
     ? "Admin access granted. You can save and edit approved records."
     : "Log in to access the approved record form.";
+  document.querySelectorAll(".admin-only").forEach(section => {
+    section.classList.toggle("hidden", !authenticated);
+  });
   if (els.adminForm) {
     els.adminForm.querySelectorAll("input, textarea, button[type='submit']").forEach(el => {
       el.disabled = !authenticated;
@@ -464,8 +466,11 @@ loadState().catch(error => {
   if (els.cameraNote) {
     els.cameraNote.textContent = "Backend unavailable. Start the server to enable saving and login.";
   }
-  renderRecord(seedRecord);
-  showResult(seedRecord);
+  if (isAdminPage) {
+    renderRecord(seedRecord);
+  } else {
+    showResult(null);
+  }
 });
 
 renderAdminActions();

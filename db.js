@@ -39,7 +39,7 @@ function mapRecord(row) {
     expiry: row.expiry,
     address: row.address,
     photoUrl: row.photo_url || "",
-    status: row.status || "Verified"
+    status: row.status || "Approved"
   };
 }
 
@@ -64,6 +64,34 @@ async function initDb(seedRecord) {
   const { rows } = await pool.query("SELECT COUNT(*)::int AS count FROM records");
   if (rows[0]?.count === 0 && seedRecord) {
     await upsertRecord(seedRecord);
+    return;
+  }
+
+  if (seedRecord) {
+    const seedId = normalizeId(seedRecord.idNumber);
+    const { rows: existing } = await pool.query(
+      `
+        SELECT full_name, id_number, document_type, country, dob, expiry, address, photo_url, status
+        FROM records
+        WHERE UPPER(id_number) = $1
+        LIMIT 1
+      `,
+      [seedId]
+    );
+    if (existing[0]) {
+      const current = mapRecord(existing[0]);
+      const shouldRefresh =
+        current.fullName !== seedRecord.fullName ||
+        current.country !== seedRecord.country ||
+        current.address !== seedRecord.address ||
+        current.documentType !== seedRecord.documentType ||
+        current.dob !== seedRecord.dob ||
+        current.expiry !== seedRecord.expiry ||
+        current.status !== seedRecord.status;
+      if (shouldRefresh) {
+        await upsertRecord(seedRecord);
+      }
+    }
   }
 }
 

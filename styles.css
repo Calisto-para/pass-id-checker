@@ -283,6 +283,20 @@ textarea:focus {
   box-shadow: 0 14px 30px rgba(36, 78, 160, 0.2);
 }
 
+.profile-photo {
+  width: 74px;
+  height: 74px;
+  border-radius: 22px;
+  object-fit: cover;
+  background: linear-gradient(135deg, rgba(36, 78, 160, 0.12), rgba(22, 163, 165, 0.12));
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+.profile-photo.hidden {
+  display: none;
+}
+
 .badge {
   padding: 8px 12px;
   border-radius: 999px;

@@ -78,6 +78,10 @@
           Photo URL
           <input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg" />
         </label>
+        <label class="full">
+          Upload photo
+          <input type="file" id="photoFile" accept="image/*" />
+        </label>
         <div class="button-row full">
           <button class="btn btn-primary" type="submit">Save person</button>
           <button class="btn btn-secondary" type="button" id="seedDemo">Load demo person</button>
@@ -93,6 +97,7 @@
 
       <div class="issued-card">
         <div class="result-card-head">
+          <img class="profile-photo" id="previewPhoto" alt="Person photo" />
           <div class="avatar" id="previewAvatar">A</div>
           <div>
             <h3 id="previewName">Ada Okafor</h3>

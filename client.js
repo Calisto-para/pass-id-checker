@@ -15,6 +15,7 @@ const seedRecord = {
 
 const els = {
   previewAvatar: document.getElementById("previewAvatar"),
+  previewPhoto: document.getElementById("previewPhoto"),
   previewName: document.getElementById("previewName"),
   previewRole: document.getElementById("previewRole"),
   previewId: document.getElementById("previewId"),
@@ -38,6 +39,7 @@ const els = {
   expiry: document.getElementById("expiry"),
   address: document.getElementById("address"),
   photoUrl: document.getElementById("photoUrl"),
+  photoFile: document.getElementById("photoFile"),
   seedDemo: document.getElementById("seedDemo"),
   recordsTable: document.getElementById("recordsTable"),
   scanInput: document.getElementById("scanInput"),
@@ -47,6 +49,7 @@ const els = {
   resultBody: document.getElementById("resultBody"),
   emptyState: document.getElementById("emptyState"),
   resultAvatar: document.getElementById("resultAvatar"),
+  resultPhoto: document.getElementById("resultPhoto"),
   resultName: document.getElementById("resultName"),
   resultDocument: document.getElementById("resultDocument"),
   resultStatus: document.getElementById("resultStatus"),
@@ -111,6 +114,29 @@ function renderBarcode(target, value) {
   target.innerHTML = barcodePattern(value);
 }
 
+function renderPhoto(target, fallbackAvatar, value, name) {
+  if (!target || !fallbackAvatar) return;
+  const src = String(value || "").trim();
+  const initials = String(name || "")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase() || "")
+    .join("")
+    .slice(0, 2) || "ID";
+
+  fallbackAvatar.textContent = initials;
+  if (src) {
+    target.src = src;
+    target.classList.remove("hidden");
+    fallbackAvatar.classList.add("hidden");
+  } else {
+    target.removeAttribute("src");
+    target.classList.add("hidden");
+    fallbackAvatar.classList.remove("hidden");
+  }
+}
+
 function renderQr(idNumber) {
   if (!els.shareQr || !els.shareLink) return;
   const link = `${origin}/?id=${encodeURIComponent(idNumber)}`;
@@ -127,6 +153,7 @@ function renderRecord(record) {
   if (els.previewStatus) els.previewStatus.textContent = record.status;
   if (els.previewCountry) els.previewCountry.textContent = record.country;
   if (els.previewExpiry) els.previewExpiry.textContent = formatDate(record.expiry);
+  renderPhoto(els.previewPhoto, els.previewAvatar, record.photoUrl, record.fullName);
   renderBarcode(els.barcodePreview, record.idNumber);
   renderQr(record.idNumber);
 }
@@ -149,6 +176,7 @@ function showResult(record) {
   els.resultDob.textContent = formatDate(record.dob);
   els.resultExpiry.textContent = formatDate(record.expiry);
   els.resultAddress.textContent = record.address;
+  renderPhoto(els.resultPhoto, els.resultAvatar, record.photoUrl, record.fullName);
   renderBarcode(els.resultBarcode, record.idNumber);
 }
 
@@ -227,6 +255,7 @@ function fillAdminForm(record) {
   els.expiry.value = record.expiry;
   els.address.value = record.address;
   els.photoUrl.value = record.photoUrl || "";
+  if (els.photoFile) els.photoFile.value = "";
 }
 
 function findRecord(query) {
@@ -243,6 +272,15 @@ async function saveRecord(record) {
   renderTable();
   renderRecord(result.record);
   return result.record;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Unable to read the selected image."));
+    reader.readAsDataURL(file);
+  });
 }
 
 async function login(event) {
@@ -385,6 +423,28 @@ function renderAdminActions() {
       renderRecord(saved);
       renderTable();
       els.authNote.textContent = "Record saved.";
+    } catch (error) {
+      els.authNote.textContent = error.message;
+    }
+  });
+
+  els.photoFile?.addEventListener("change", async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      els.photoUrl.value = dataUrl;
+      const preview = {
+        fullName: els.fullName.value.trim() || seedRecord.fullName,
+        photoUrl: dataUrl,
+        documentType: els.documentType.value.trim() || seedRecord.documentType,
+        idNumber: normalizeId(els.idNumber.value) || seedRecord.idNumber,
+        status: "Verified",
+        country: els.country.value.trim() || seedRecord.country,
+        expiry: els.expiry.value || seedRecord.expiry
+      };
+      renderRecord(preview);
+      els.authNote.textContent = "Photo loaded. Save the record to store it.";
     } catch (error) {
       els.authNote.textContent = error.message;
     }

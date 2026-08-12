@@ -395,6 +395,30 @@ textarea:focus {
   word-break: break-all;
 }
 
+.photo-dropzone {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  border: 1px dashed rgba(36, 78, 160, 0.22);
+  background: rgba(36, 78, 160, 0.04);
+}
+
+.photo-form-preview {
+  width: 100%;
+  max-width: 240px;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.photo-form-preview.hidden {
+  display: none;
+}
+
 .table-wrap {
   overflow-x: auto;
 }

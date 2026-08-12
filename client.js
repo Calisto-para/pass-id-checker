@@ -40,6 +40,7 @@ const els = {
   address: document.getElementById("address"),
   photoUrl: document.getElementById("photoUrl"),
   photoFile: document.getElementById("photoFile"),
+  photoFormPreview: document.getElementById("photoFormPreview"),
   seedDemo: document.getElementById("seedDemo"),
   recordsTable: document.getElementById("recordsTable"),
   scanInput: document.getElementById("scanInput"),
@@ -258,6 +259,15 @@ function fillAdminForm(record) {
   els.address.value = record.address;
   els.photoUrl.value = record.photoUrl || "";
   if (els.photoFile) els.photoFile.value = "";
+  if (els.photoFormPreview) {
+    if (record.photoUrl) {
+      els.photoFormPreview.src = record.photoUrl;
+      els.photoFormPreview.classList.remove("hidden");
+    } else {
+      els.photoFormPreview.removeAttribute("src");
+      els.photoFormPreview.classList.add("hidden");
+    }
+  }
 }
 
 function findRecord(query) {
@@ -436,6 +446,10 @@ function renderAdminActions() {
     try {
       const dataUrl = await readFileAsDataUrl(file);
       els.photoUrl.value = dataUrl;
+      if (els.photoFormPreview) {
+        els.photoFormPreview.src = dataUrl;
+        els.photoFormPreview.classList.remove("hidden");
+      }
       const preview = {
         fullName: els.fullName.value.trim() || seedRecord.fullName,
         photoUrl: dataUrl,
@@ -456,6 +470,21 @@ function renderAdminActions() {
     fillAdminForm(seedRecord);
     renderRecord(seedRecord);
   });
+
+  if (els.photoUrl) {
+    els.photoUrl.addEventListener("input", () => {
+      const value = els.photoUrl.value.trim();
+      if (els.photoFormPreview) {
+        if (value) {
+          els.photoFormPreview.src = value;
+          els.photoFormPreview.classList.remove("hidden");
+        } else {
+          els.photoFormPreview.removeAttribute("src");
+          els.photoFormPreview.classList.add("hidden");
+        }
+      }
+    });
+  }
 }
 
 loadState().catch(error => {

@@ -279,6 +279,13 @@ function findRecord(query) {
   return records.find(record => normalizeId(record.idNumber) === normalized) || null;
 }
 
+async function fetchRecord(query) {
+  const normalized = normalizeId(query);
+  if (!normalized) return null;
+  const response = await fetchJson(`/api/records/${encodeURIComponent(normalized)}`);
+  return response.record || null;
+}
+
 async function saveRecord(record) {
   const result = await fetchJson("/api/records", {
     method: "POST",
@@ -324,10 +331,16 @@ async function logout() {
 }
 
 function initClientLookup() {
-  const lookup = () => {
-    const record = findRecord(els.scanInput.value);
-    showResult(record);
-    els.cameraNote.textContent = record ? "Approved record loaded." : "No matching approved record found.";
+  const lookup = async () => {
+    const code = els.scanInput.value;
+    try {
+      const record = await fetchRecord(code);
+      showResult(record);
+      els.cameraNote.textContent = record ? "Approved record loaded." : "No matching approved record found.";
+    } catch (error) {
+      showResult(null);
+      els.cameraNote.textContent = error.message;
+    }
   };
   els.lookupBtn.addEventListener("click", lookup);
   els.scanInput.addEventListener("keydown", event => {
@@ -386,7 +399,7 @@ async function scanLoop() {
       const code = results[0].rawValue || "";
       if (code) {
         els.scanInput.value = code;
-        const record = findRecord(code);
+        const record = await fetchRecord(code);
         showResult(record);
         els.cameraNote.textContent = record ? `Detected ${code}.` : `Detected ${code}, but no approved record exists.`;
       }
@@ -424,9 +437,11 @@ function renderAdminActions() {
 
     try {
       const saved = await saveRecord(record);
+      const refreshed = await fetchJson("/api/records");
+      records = refreshed.records || records;
+      renderTable();
       fillAdminForm(saved);
       renderRecord(saved);
-      renderTable();
       els.authNote.textContent = "Record saved and approved.";
     } catch (error) {
       els.authNote.textContent = error.message;

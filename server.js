@@ -362,8 +362,28 @@ async function handleRequest(req, res) {
     return;
   }
 
+  if (req.method === "GET" && pathname === "/admin.html") {
+    sendFile(res, path.join(__dirname, "admin.html"));
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/index.html") {
+    sendFile(res, path.join(__dirname, "index.html"));
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/styles.css") {
+    sendFile(res, path.join(__dirname, "styles.css"));
+    return;
+  }
+
   if (req.method === "GET" && pathname === "/templatemo-622-clearwave.css") {
     sendFile(res, path.join(__dirname, "templatemo-622-clearwave.css"));
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/client.js") {
+    sendFile(res, path.join(__dirname, "client.js"));
     return;
   }
 

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ID Verification Admin</title>
+  <title>ID Verification | Admin Console</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -12,7 +12,7 @@
 <body class="admin-page">
   <header class="topbar admin-topbar">
     <div>
-      <p class="eyebrow">Admin Dashboard</p>
+      <p class="eyebrow">Admin dashboard</p>
       <h1>Upload, issue, and manage IDs</h1>
     </div>
     <a class="topbar-link" href="/">Client view</a>
@@ -23,7 +23,7 @@
       <div>
         <p class="section-tag">Admin login</p>
         <h2>Secure staff access</h2>
-        <p class="lead">Log in to add or edit person details. Every saved ID gets a QR code and a public client lookup link.</p>
+        <p class="lead">Log in to add or edit verified person details. Every saved ID gets a QR code and a public client lookup link.</p>
       </div>
 
       <form class="login-card" id="loginForm">
@@ -55,7 +55,7 @@
           <input type="text" id="idNumber" placeholder="ID-1002" required />
         </label>
         <label>
-          Passport / national ID
+          Passport or national ID
           <input type="text" id="documentType" placeholder="Passport" required />
         </label>
         <label>
@@ -72,7 +72,7 @@
         </label>
         <label class="full">
           Address
-          <textarea id="address" rows="3" placeholder="Street, city, state" required></textarea>
+          <textarea id="address" rows="3" placeholder="Street, city, region" required></textarea>
         </label>
         <label class="full">
           Photo URL

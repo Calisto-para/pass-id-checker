@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ID Verification</title>
+  <title>ID Verification | EU Client Check</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -12,19 +12,19 @@
 <body class="client-page">
   <header class="topbar">
     <div>
-      <p class="eyebrow">Client Verification</p>
-      <h1>Scan an ID to view the person’s details</h1>
+      <p class="eyebrow">Client verification</p>
+      <h1>Scan an ID to view verified details</h1>
     </div>
-    <a class="topbar-link" href="/admin.html">Admin login</a>
+    <a class="topbar-link" href="/admin.html">Admin access</a>
   </header>
 
   <main class="page-grid client-grid">
     <section class="hero-panel client-hero">
       <div>
         <p class="section-tag">Client page</p>
-        <h2>Barcode / QR scan</h2>
+        <h2>Barcode and QR scan</h2>
         <p class="lead">
-          Enter a code manually or scan a QR/barcode to instantly look up the person stored by the admin.
+          Enter a code manually or scan a QR or barcode to instantly look up the person stored by the admin.
         </p>
       </div>
 
@@ -44,10 +44,10 @@
     <section class="panel result-panel">
       <div class="panel-head">
         <p class="section-tag">Client result</p>
-        <h2>Person details</h2>
+        <h2>Verified person details</h2>
       </div>
 
-      <div class="result-empty" id="emptyState">Scan a code to show the stored person details here.</div>
+      <div class="result-empty" id="emptyState">Scan a code to show the stored verified details here.</div>
 
       <div class="result-body hidden" id="resultBody">
         <div class="result-card-head">
@@ -64,7 +64,7 @@
         <div class="detail-grid">
           <div><span>ID Number</span><strong id="resultId">ID-0001</strong></div>
           <div><span>Country</span><strong id="resultCountry">Nigeria</strong></div>
-          <div><span>Date of birth</span><strong id="resultDob">1998-01-14</strong></div>
+          <div><span>Date of birth</span><strong id="resultDob">14/01/1998</strong></div>
           <div><span>Expiry</span><strong id="resultExpiry">2028-08-12</strong></div>
           <div class="wide"><span>Address</span><strong id="resultAddress">Lagos, Nigeria</strong></div>
         </div>
@@ -73,8 +73,8 @@
 
     <section class="panel camera-panel">
       <div class="panel-head">
-        <p class="section-tag">Camera</p>
-        <h2>Live barcode scanner</h2>
+      <p class="section-tag">Camera</p>
+      <h2>Live barcode scanner</h2>
       </div>
       <video id="cameraFeed" playsinline muted></video>
       <div class="button-row">

@@ -71,8 +71,22 @@ const origin = window.location.origin === "null"
   ? `${window.location.protocol}//${window.location.host}`
   : window.location.origin;
 
+const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric"
+});
+
 function normalizeId(value) {
   return String(value || "").trim().toUpperCase();
+}
+
+function formatDate(value) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return String(value || "");
+  }
+  return dateFormatter.format(parsed);
 }
 
 function escapeHtml(value) {
@@ -112,7 +126,7 @@ function renderRecord(record) {
   if (els.previewId) els.previewId.textContent = record.idNumber;
   if (els.previewStatus) els.previewStatus.textContent = record.status;
   if (els.previewCountry) els.previewCountry.textContent = record.country;
-  if (els.previewExpiry) els.previewExpiry.textContent = record.expiry;
+  if (els.previewExpiry) els.previewExpiry.textContent = formatDate(record.expiry);
   renderBarcode(els.barcodePreview, record.idNumber);
   renderQr(record.idNumber);
 }
@@ -132,8 +146,8 @@ function showResult(record) {
   els.resultStatus.textContent = record.status;
   els.resultId.textContent = record.idNumber;
   els.resultCountry.textContent = record.country;
-  els.resultDob.textContent = record.dob;
-  els.resultExpiry.textContent = record.expiry;
+  els.resultDob.textContent = formatDate(record.dob);
+  els.resultExpiry.textContent = formatDate(record.expiry);
   els.resultAddress.textContent = record.address;
   renderBarcode(els.resultBarcode, record.idNumber);
 }

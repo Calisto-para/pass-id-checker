@@ -462,14 +462,8 @@ async function handleRequest(req, res) {
 
   if (req.method === "GET" && pathname.startsWith("/api/qr/") && pathname.endsWith(".svg")) {
     const id = decodeURIComponent(pathname.replace("/api/qr/", "").replace(".svg", ""));
-    const record = await findRecordById(id);
-    if (!record) {
-      sendJson(res, 404, { error: "Record not found" });
-      return;
-    }
-
     try {
-      const svg = qrSvg(record.idNumber);
+      const svg = qrSvg(id);
       res.writeHead(200, { "Content-Type": "image/svg+xml; charset=utf-8" });
       res.end(svg);
     } catch (error) {

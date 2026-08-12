@@ -112,7 +112,11 @@ function barcodePattern(value) {
 
 function renderBarcode(target, value) {
   if (!target) return;
-  target.innerHTML = barcodePattern(value);
+  const code = encodeURIComponent(normalizeId(value));
+  target.innerHTML = `
+    <img class="scan-code" src="/api/qr/${code}.svg" alt="Scannable QR code" />
+    <div class="scan-code-label">${escapeHtml(normalizeId(value))}</div>
+  `;
 }
 
 function renderPhoto(target, fallbackAvatar, value, name) {

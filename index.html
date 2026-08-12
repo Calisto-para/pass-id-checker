@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ID Verification | EU Client Check</title>
+  <title>ID Verification | Verified Client Access</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -13,7 +13,7 @@
   <header class="topbar">
     <div>
       <p class="eyebrow">Client verification</p>
-      <h1>Scan an ID to view verified details</h1>
+      <h1>Scan an ID to view approved records</h1>
     </div>
     <a class="topbar-link" href="/admin.html">Admin access</a>
   </header>
@@ -24,7 +24,7 @@
         <p class="section-tag">Client page</p>
         <h2>Barcode and QR scan</h2>
         <p class="lead">
-          Enter a code manually or scan a QR or barcode to instantly look up the person stored by the admin.
+          Enter a code manually or scan a QR or barcode to securely retrieve the approved record.
         </p>
       </div>
 
@@ -37,17 +37,17 @@
           <button class="btn btn-primary" id="lookupBtn" type="button">Look up</button>
           <button class="btn btn-secondary" id="cameraBtn" type="button">Use camera</button>
         </div>
-        <p class="status-text" id="cameraNote">Client lookup is ready.</p>
+        <p class="status-text" id="cameraNote">Client lookup is ready for approved scans.</p>
       </div>
     </section>
 
     <section class="panel result-panel">
       <div class="panel-head">
         <p class="section-tag">Client result</p>
-        <h2>Verified person details</h2>
+        <h2>Approved record details</h2>
       </div>
 
-      <div class="result-empty" id="emptyState">Scan a code to show the stored verified details here.</div>
+      <div class="result-empty" id="emptyState">Scan a code to display the approved record details here.</div>
 
       <div class="result-body hidden" id="resultBody">
         <div class="result-card-head">
@@ -57,7 +57,7 @@
             <h3 id="resultName">Olena Shevchenko</h3>
             <p id="resultDocument">Passport</p>
           </div>
-          <span class="badge" id="resultStatus">Verified</span>
+          <span class="badge" id="resultStatus">Approved</span>
         </div>
 
         <div class="barcode" id="resultBarcode"></div>
@@ -74,8 +74,8 @@
 
     <section class="panel camera-panel">
       <div class="panel-head">
-      <p class="section-tag">Camera</p>
-      <h2>Live barcode scanner</h2>
+        <p class="section-tag">Camera</p>
+        <h2>Live barcode scanner</h2>
       </div>
       <video id="cameraFeed" playsinline muted></video>
       <div class="button-row">

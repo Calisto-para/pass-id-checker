@@ -25,7 +25,7 @@ function normalizeRecord(record) {
     expiry: String(record.expiry || "").trim(),
     address: String(record.address || "").trim(),
     photoUrl: String(record.photoUrl || "").trim(),
-    status: String(record.status || "Verified").trim() || "Verified"
+    status: String(record.status || "Approved").trim() || "Approved"
   };
 }
 
@@ -55,7 +55,7 @@ async function initDb(seedRecord) {
       expiry TEXT NOT NULL,
       address TEXT NOT NULL,
       photo_url TEXT NOT NULL DEFAULT '',
-      status TEXT NOT NULL DEFAULT 'Verified',
+      status TEXT NOT NULL DEFAULT 'Approved',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )

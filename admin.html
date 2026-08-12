@@ -13,7 +13,7 @@
   <header class="topbar admin-topbar">
     <div>
       <p class="eyebrow">Admin dashboard</p>
-      <h1>Upload, issue, and manage IDs</h1>
+      <h1>Issue and manage approved records</h1>
     </div>
     <a class="topbar-link" href="/">Client view</a>
   </header>
@@ -23,7 +23,7 @@
       <div>
         <p class="section-tag">Admin login</p>
         <h2>Secure staff access</h2>
-        <p class="lead">Log in to add or edit verified person details. Every saved ID gets a QR code and a public client lookup link.</p>
+        <p class="lead">Log in to create or update approved records. Each saved entry generates a QR code and a public lookup link.</p>
       </div>
 
       <form class="login-card" id="loginForm">
@@ -35,14 +35,14 @@
           <button class="btn btn-primary" id="loginBtn" type="submit">Log in</button>
           <button class="btn btn-secondary" id="logoutBtn" type="button">Log out</button>
         </div>
-        <p class="status-text" id="authNote">Log in to access the admin form.</p>
+        <p class="status-text" id="authNote">Log in to access the approved record form.</p>
       </form>
     </section>
 
     <section class="panel admin-form-panel">
       <div class="panel-head">
         <p class="section-tag">Person details</p>
-        <h2>Create a client record</h2>
+        <h2>Create an approved record</h2>
       </div>
 
       <form class="form-grid admin-form" id="adminForm">
@@ -83,8 +83,8 @@
           <input type="file" id="photoFile" accept="image/*" />
         </label>
         <div class="button-row full">
-          <button class="btn btn-primary" type="submit">Save person</button>
-          <button class="btn btn-secondary" type="button" id="seedDemo">Load demo person</button>
+          <button class="btn btn-primary" type="submit">Save record</button>
+          <button class="btn btn-secondary" type="button" id="seedDemo">Load demo record</button>
         </div>
       </form>
     </section>
@@ -103,7 +103,7 @@
             <h3 id="previewName">Olena Shevchenko</h3>
             <p id="previewRole">Passport</p>
           </div>
-          <span class="badge" id="previewStatus">Verified</span>
+          <span class="badge" id="previewStatus">Approved</span>
         </div>
         <div class="barcode" id="barcodePreview"></div>
         <div class="detail-grid compact">
@@ -125,7 +125,7 @@
     <section class="panel table-panel">
       <div class="panel-head">
         <p class="section-tag">Stored records</p>
-        <h2>Saved people</h2>
+        <h2>Saved records</h2>
       </div>
       <div class="table-wrap">
         <table>

@@ -10,7 +10,7 @@ const seedRecord = {
   expiry: "2028-08-12",
   address: "Kyiv, Ukraine",
   photoUrl: "",
-  status: "Verified"
+  status: "Approved"
 };
 
 const els = {
@@ -219,8 +219,8 @@ function setAuthState(authenticated) {
   if (!isAdminPage) return;
   session.authenticated = authenticated;
   els.authNote.textContent = authenticated
-    ? "Admin access granted. You can save and edit records."
-    : "Log in to access the admin form.";
+    ? "Admin access granted. You can save and edit approved records."
+    : "Log in to access the approved record form.";
   if (els.adminForm) {
     els.adminForm.querySelectorAll("input, textarea, button[type='submit']").forEach(el => {
       el.disabled = !authenticated;
@@ -311,7 +311,7 @@ function initClientLookup() {
   const lookup = () => {
     const record = findRecord(els.scanInput.value);
     showResult(record);
-    els.cameraNote.textContent = record ? "Record loaded." : "No matching record found.";
+    els.cameraNote.textContent = record ? "Approved record loaded." : "No matching approved record found.";
   };
   els.lookupBtn.addEventListener("click", lookup);
   els.scanInput.addEventListener("keydown", event => {
@@ -372,7 +372,7 @@ async function scanLoop() {
         els.scanInput.value = code;
         const record = findRecord(code);
         showResult(record);
-        els.cameraNote.textContent = record ? `Detected ${code}.` : `Detected ${code}, but no matching record exists.`;
+        els.cameraNote.textContent = record ? `Detected ${code}.` : `Detected ${code}, but no approved record exists.`;
       }
     }
   } catch {}
@@ -410,7 +410,7 @@ function renderAdminActions() {
       expiry: els.expiry.value,
       address: els.address.value.trim(),
       photoUrl: els.photoUrl.value.trim(),
-      status: "Verified"
+      status: "Approved"
     };
 
     if (!record.fullName || !record.idNumber || !record.documentType || !record.country || !record.dob || !record.expiry || !record.address) {
@@ -422,7 +422,7 @@ function renderAdminActions() {
       fillAdminForm(saved);
       renderRecord(saved);
       renderTable();
-      els.authNote.textContent = "Record saved.";
+      els.authNote.textContent = "Record saved and approved.";
     } catch (error) {
       els.authNote.textContent = error.message;
     }
@@ -439,7 +439,7 @@ function renderAdminActions() {
         photoUrl: dataUrl,
         documentType: els.documentType.value.trim() || seedRecord.documentType,
         idNumber: normalizeId(els.idNumber.value) || seedRecord.idNumber,
-        status: "Verified",
+        status: "Approved",
         country: els.country.value.trim() || seedRecord.country,
         expiry: els.expiry.value || seedRecord.expiry
       };

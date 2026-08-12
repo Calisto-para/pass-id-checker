@@ -29,7 +29,7 @@ const seedRecord = {
   expiry: "2028-08-12",
   address: "Kyiv, Ukraine",
   photoUrl: "",
-  status: "Verified"
+  status: "Approved"
 };
 
 let sessionToken = null;
@@ -337,7 +337,7 @@ function createRecord(input) {
     expiry: String(input.expiry || "").trim(),
     address: String(input.address || "").trim(),
     photoUrl: String(input.photoUrl || "").trim(),
-    status: "Verified"
+    status: "Approved"
   };
 }
 

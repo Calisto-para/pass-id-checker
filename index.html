@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ID Verification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="client-page">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Client Verification</p>
+      <h1>Scan an ID to view the person’s details</h1>
+    </div>
+    <a class="topbar-link" href="/admin.html">Admin login</a>
+  </header>
+
+  <main class="page-grid client-grid">
+    <section class="hero-panel client-hero">
+      <div>
+        <p class="section-tag">Client page</p>
+        <h2>Barcode / QR scan</h2>
+        <p class="lead">
+          Enter a code manually or scan a QR/barcode to instantly look up the person stored by the admin.
+        </p>
+      </div>
+
+      <div class="scan-panel">
+        <label>
+          Scan code
+          <input id="scanInput" type="text" placeholder="ID-0001" />
+        </label>
+        <div class="button-row">
+          <button class="btn btn-primary" id="lookupBtn" type="button">Look up</button>
+          <button class="btn btn-secondary" id="cameraBtn" type="button">Use camera</button>
+        </div>
+        <p class="status-text" id="cameraNote">Client lookup is ready.</p>
+      </div>
+    </section>
+
+    <section class="panel result-panel">
+      <div class="panel-head">
+        <p class="section-tag">Client result</p>
+        <h2>Person details</h2>
+      </div>
+
+      <div class="result-empty" id="emptyState">Scan a code to show the stored person details here.</div>
+
+      <div class="result-body hidden" id="resultBody">
+        <div class="result-card-head">
+          <div class="avatar" id="resultAvatar">A</div>
+          <div>
+            <h3 id="resultName">Ada Okafor</h3>
+            <p id="resultDocument">Passport</p>
+          </div>
+          <span class="badge" id="resultStatus">Verified</span>
+        </div>
+
+        <div class="barcode" id="resultBarcode"></div>
+
+        <div class="detail-grid">
+          <div><span>ID Number</span><strong id="resultId">ID-0001</strong></div>
+          <div><span>Country</span><strong id="resultCountry">Nigeria</strong></div>
+          <div><span>Date of birth</span><strong id="resultDob">1998-01-14</strong></div>
+          <div><span>Expiry</span><strong id="resultExpiry">2028-08-12</strong></div>
+          <div class="wide"><span>Address</span><strong id="resultAddress">Lagos, Nigeria</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel camera-panel">
+      <div class="panel-head">
+        <p class="section-tag">Camera</p>
+        <h2>Live barcode scanner</h2>
+      </div>
+      <video id="cameraFeed" playsinline muted></video>
+      <div class="button-row">
+        <button class="btn btn-primary" id="startCameraBtn" type="button">Start camera</button>
+        <button class="btn btn-secondary" id="stopCameraBtn" type="button">Stop camera</button>
+      </div>
+      <p class="status-text" id="cameraState">Camera off</p>
+    </section>
+  </main>
+
+  <script src="/client.js"></script>
+</body>
+</html>

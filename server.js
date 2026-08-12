@@ -1,0 +1,479 @@
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+const { initDb, listRecords, findRecordById, upsertRecord } = require("./db");
+
+const PORT = process.env.PORT || 3000;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+const SESSION_COOKIE = "idv_session";
+
+const mimeTypes = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml"
+};
+
+const seedRecord = {
+  fullName: "Ada Okafor",
+  idNumber: "ID-0001",
+  documentType: "Passport",
+  country: "Nigeria",
+  dob: "1998-01-14",
+  expiry: "2028-08-12",
+  address: "Lagos, Nigeria",
+  photoUrl: "",
+  status: "Verified"
+};
+
+let sessionToken = null;
+
+function normalizeId(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function parseBody(req) {
+  return new Promise(resolve => {
+    let body = "";
+    req.on("data", chunk => {
+      body += chunk;
+      if (body.length > 1_000_000) {
+        req.destroy();
+      }
+    });
+    req.on("end", () => {
+      if (!body) {
+        resolve({});
+        return;
+      }
+      try {
+        resolve(JSON.parse(body));
+      } catch {
+        resolve({});
+      }
+    });
+  });
+}
+
+function sendJson(res, statusCode, payload, extraHeaders = {}) {
+  res.writeHead(statusCode, {
+    "Content-Type": "application/json; charset=utf-8",
+    ...extraHeaders
+  });
+  res.end(JSON.stringify(payload));
+}
+
+function sendFile(res, filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  const type = mimeTypes[ext] || "application/octet-stream";
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      sendJson(res, 404, { error: "Not found" });
+      return;
+    }
+    res.writeHead(200, { "Content-Type": type });
+    res.end(data);
+  });
+}
+
+function getCookie(req, name) {
+  const header = req.headers.cookie || "";
+  const parts = header.split(";").map(part => part.trim());
+  for (const part of parts) {
+    const [key, ...rest] = part.split("=");
+    if (key === name) {
+      return decodeURIComponent(rest.join("="));
+    }
+  }
+  return null;
+}
+
+function isAuthenticated(req) {
+  return getCookie(req, SESSION_COOKIE) === sessionToken && sessionToken !== null;
+}
+
+function gfTables() {
+  const exp = new Array(512);
+  const log = new Array(256);
+  let x = 1;
+  for (let i = 0; i < 255; i++) {
+    exp[i] = x;
+    log[x] = i;
+    x <<= 1;
+    if (x & 0x100) {
+      x ^= 0x11d;
+    }
+  }
+  for (let i = 255; i < 512; i++) {
+    exp[i] = exp[i - 255];
+  }
+  return { exp, log };
+}
+
+const gf = gfTables();
+
+function gfMul(a, b) {
+  if (!a || !b) {
+    return 0;
+  }
+  return gf.exp[gf.log[a] + gf.log[b]];
+}
+
+function polyMul(p, q) {
+  const result = new Array(p.length + q.length - 1).fill(0);
+  for (let i = 0; i < p.length; i++) {
+    for (let j = 0; j < q.length; j++) {
+      result[i + j] ^= gfMul(p[i], q[j]);
+    }
+  }
+  return result;
+}
+
+function rsGenerator(degree) {
+  let poly = [1];
+  for (let i = 0; i < degree; i++) {
+    poly = polyMul(poly, [1, gf.exp[i]]);
+  }
+  return poly;
+}
+
+function rsRemainder(data, degree) {
+  const generator = rsGenerator(degree);
+  const work = data.slice();
+  for (let i = 0; i < degree; i++) {
+    work.push(0);
+  }
+  for (let i = 0; i < data.length; i++) {
+    const factor = work[i];
+    if (factor !== 0) {
+      for (let j = 1; j < generator.length; j++) {
+        work[i + j] ^= gfMul(generator[j], factor);
+      }
+    }
+  }
+  return work.slice(work.length - degree);
+}
+
+function appendBits(bits, value, length) {
+  for (let i = length - 1; i >= 0; i--) {
+    bits.push((value >>> i) & 1);
+  }
+}
+
+function bitsToBytes(bits) {
+  const bytes = [];
+  for (let i = 0; i < bits.length; i += 8) {
+    let byte = 0;
+    for (let j = 0; j < 8; j++) {
+      byte = (byte << 1) | (bits[i + j] || 0);
+    }
+    bytes.push(byte);
+  }
+  return bytes;
+}
+
+function drawFinder(matrix, reserved, x, y) {
+  for (let dy = -1; dy <= 7; dy++) {
+    for (let dx = -1; dx <= 7; dx++) {
+      const xx = x + dx;
+      const yy = y + dy;
+      if (xx < 0 || yy < 0 || xx >= matrix.length || yy >= matrix.length) {
+        continue;
+      }
+      reserved[yy][xx] = true;
+      const inPattern = dx >= 0 && dx <= 6 && dy >= 0 && dy <= 6;
+      if (!inPattern) {
+        matrix[yy][xx] = 0;
+        continue;
+      }
+      const edge = dx === 0 || dx === 6 || dy === 0 || dy === 6;
+      const center = dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4;
+      matrix[yy][xx] = edge || center ? 1 : 0;
+    }
+  }
+}
+
+function setFormatInfo(matrix, reserved, bits) {
+  const size = matrix.length;
+  const coordsA = [
+    [8, 0], [8, 1], [8, 2], [8, 3], [8, 4], [8, 5], [8, 7], [8, 8],
+    [7, 8], [5, 8], [4, 8], [3, 8], [2, 8], [1, 8], [0, 8]
+  ];
+  const coordsB = [
+    [size - 1, 8], [size - 2, 8], [size - 3, 8], [size - 4, 8], [size - 5, 8],
+    [size - 6, 8], [size - 7, 8], [8, size - 8], [8, size - 7], [8, size - 6],
+    [8, size - 5], [8, size - 4], [8, size - 3], [8, size - 2], [8, size - 1]
+  ];
+  coordsA.forEach(([y, x], index) => {
+    matrix[y][x] = bits[index];
+    reserved[y][x] = true;
+  });
+  coordsB.forEach(([y, x], index) => {
+    matrix[y][x] = bits[index];
+    reserved[y][x] = true;
+  });
+}
+
+function formatBitsLMask0() {
+  return "111011111000100".split("").map(bit => Number(bit));
+}
+
+function createQrMatrix(text) {
+  const value = String(text || "").trim().toUpperCase();
+  const bytes = Buffer.from(value, "utf8");
+  if (bytes.length > 17) {
+    throw new Error("QR content is too long for this simple generator");
+  }
+
+  const dataBits = [];
+  appendBits(dataBits, 0b0100, 4);
+  appendBits(dataBits, bytes.length, 8);
+  bytes.forEach(byte => appendBits(dataBits, byte, 8));
+  appendBits(dataBits, 0, Math.min(4, 152 - dataBits.length));
+  while (dataBits.length % 8 !== 0) {
+    dataBits.push(0);
+  }
+  let dataBytes = bitsToBytes(dataBits);
+  while (dataBytes.length < 19) {
+    dataBytes.push(dataBytes.length % 2 === 0 ? 0xec : 0x11);
+  }
+  dataBytes = dataBytes.slice(0, 19);
+  const ecc = rsRemainder(dataBytes, 7);
+  const codewords = [...dataBytes, ...ecc];
+
+  const size = 21;
+  const matrix = Array.from({ length: size }, () => Array(size).fill(null));
+  const reserved = Array.from({ length: size }, () => Array(size).fill(false));
+
+  drawFinder(matrix, reserved, 0, 0);
+  drawFinder(matrix, reserved, size - 7, 0);
+  drawFinder(matrix, reserved, 0, size - 7);
+
+  for (let i = 0; i < size; i++) {
+    if (!reserved[6][i]) {
+      matrix[6][i] = i % 2 === 0 ? 1 : 0;
+      reserved[6][i] = true;
+    }
+    if (!reserved[i][6]) {
+      matrix[i][6] = i % 2 === 0 ? 1 : 0;
+      reserved[i][6] = true;
+    }
+  }
+
+  matrix[size - 8][8] = 1;
+  reserved[size - 8][8] = true;
+
+  setFormatInfo(matrix, reserved, formatBitsLMask0());
+
+  const dataBitsStream = [];
+  codewords.forEach(byte => appendBits(dataBitsStream, byte, 8));
+  let bitIndex = 0;
+  let upward = true;
+
+  for (let col = size - 1; col > 0; col -= 2) {
+    if (col === 6) {
+      col--;
+    }
+    for (let i = 0; i < size; i++) {
+      const row = upward ? size - 1 - i : i;
+      for (let offset = 0; offset < 2; offset++) {
+        const x = col - offset;
+        if (reserved[row][x]) {
+          continue;
+        }
+        const bit = dataBitsStream[bitIndex++] || 0;
+        matrix[row][x] = ((row + x) % 2 === 0) ? (bit ^ 1) : bit;
+        reserved[row][x] = true;
+      }
+    }
+    upward = !upward;
+  }
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (matrix[y][x] === null) {
+        matrix[y][x] = 0;
+      }
+    }
+  }
+
+  return matrix;
+}
+
+function qrSvg(text) {
+  const matrix = createQrMatrix(text);
+  const size = matrix.length;
+  const margin = 4;
+  const viewSize = size + margin * 2;
+  let shapes = "";
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (matrix[y][x]) {
+        shapes += `<rect x="${x + margin}" y="${y + margin}" width="1" height="1" />`;
+      }
+    }
+  }
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewSize} ${viewSize}" shape-rendering="crispEdges">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <g fill="#000000">${shapes}</g>
+</svg>`;
+}
+
+function createRecord(input) {
+  return {
+    fullName: String(input.fullName || "").trim(),
+    idNumber: normalizeId(input.idNumber),
+    documentType: String(input.documentType || "").trim(),
+    country: String(input.country || "").trim(),
+    dob: String(input.dob || "").trim(),
+    expiry: String(input.expiry || "").trim(),
+    address: String(input.address || "").trim(),
+    photoUrl: String(input.photoUrl || "").trim(),
+    status: "Verified"
+  };
+}
+
+function validRecord(record) {
+  return Boolean(
+    record.fullName &&
+    record.idNumber &&
+    record.documentType &&
+    record.country &&
+    record.dob &&
+    record.expiry &&
+    record.address
+  );
+}
+
+async function handleRequest(req, res) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const pathname = url.pathname;
+
+  if (req.method === "GET" && pathname === "/") {
+    sendFile(res, path.join(__dirname, "index.html"));
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/templatemo-622-clearwave.css") {
+    sendFile(res, path.join(__dirname, "templatemo-622-clearwave.css"));
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/templatemo-622-clearwave.js") {
+    sendFile(res, path.join(__dirname, "templatemo-622-clearwave.js"));
+    return;
+  }
+
+  if (req.method === "GET" && pathname.startsWith("/images/")) {
+    const imagePath = path.join(__dirname, pathname);
+    sendFile(res, imagePath);
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/api/session") {
+    sendJson(res, 200, { authenticated: isAuthenticated(req) });
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/api/login") {
+    const body = await parseBody(req);
+    if (String(body.password || "") !== ADMIN_PASSWORD) {
+      sendJson(res, 401, { error: "Invalid admin password" });
+      return;
+    }
+
+    sessionToken = crypto.randomBytes(24).toString("hex");
+    sendJson(res, 200, { authenticated: true }, {
+      "Set-Cookie": `${SESSION_COOKIE}=${encodeURIComponent(sessionToken)}; Path=/; HttpOnly`
+    });
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/api/logout") {
+    sessionToken = null;
+    sendJson(res, 200, { authenticated: false }, {
+      "Set-Cookie": `${SESSION_COOKIE}=; Path=/; HttpOnly; Max-Age=0`
+    });
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/api/records") {
+    sendJson(res, 200, { records: await listRecords() });
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/api/records") {
+    if (!isAuthenticated(req)) {
+      sendJson(res, 401, { error: "Admin login required" });
+      return;
+    }
+
+    const body = await parseBody(req);
+    const record = createRecord(body);
+    if (!validRecord(record)) {
+      sendJson(res, 400, { error: "Missing required fields" });
+      return;
+    }
+
+    const saved = await upsertRecord(record);
+    const records = await listRecords();
+    sendJson(res, 200, { record: saved, records });
+    return;
+  }
+
+  if (req.method === "GET" && pathname.startsWith("/api/records/")) {
+    const id = decodeURIComponent(pathname.replace("/api/records/", ""));
+    const record = await findRecordById(id);
+    if (!record) {
+      sendJson(res, 404, { error: "Record not found" });
+      return;
+    }
+    sendJson(res, 200, { record });
+    return;
+  }
+
+  if (req.method === "GET" && pathname.startsWith("/api/qr/") && pathname.endsWith(".svg")) {
+    const id = decodeURIComponent(pathname.replace("/api/qr/", "").replace(".svg", ""));
+    const record = await findRecordById(id);
+    if (!record) {
+      sendJson(res, 404, { error: "Record not found" });
+      return;
+    }
+
+    try {
+      const svg = qrSvg(record.idNumber);
+      res.writeHead(200, { "Content-Type": "image/svg+xml; charset=utf-8" });
+      res.end(svg);
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
+    return;
+  }
+
+  sendJson(res, 404, { error: "Not found" });
+}
+
+initDb(seedRecord)
+  .then(() => {
+    const server = http.createServer((req, res) => {
+      handleRequest(req, res).catch(error => {
+        sendJson(res, 500, { error: error.message || "Internal server error" });
+      });
+    });
+
+    server.listen(PORT, () => {
+      console.log(`ID verification server running at http://localhost:${PORT}`);
+    });
+  })
+  .catch(error => {
+    console.error("Failed to initialize PostgreSQL storage:", error.message);
+    process.exit(1);
+  });

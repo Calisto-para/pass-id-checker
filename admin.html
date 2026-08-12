@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ID Verification Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="admin-page">
+  <header class="topbar admin-topbar">
+    <div>
+      <p class="eyebrow">Admin Dashboard</p>
+      <h1>Upload, issue, and manage IDs</h1>
+    </div>
+    <a class="topbar-link" href="/">Client view</a>
+  </header>
+
+  <main class="page-grid admin-grid">
+    <section class="hero-panel admin-hero">
+      <div>
+        <p class="section-tag">Admin login</p>
+        <h2>Secure staff access</h2>
+        <p class="lead">Log in to add or edit person details. Every saved ID gets a QR code and a public client lookup link.</p>
+      </div>
+
+      <form class="login-card" id="loginForm">
+        <label>
+          Admin password
+          <input type="password" id="adminPassword" placeholder="Enter admin password" />
+        </label>
+        <div class="button-row">
+          <button class="btn btn-primary" id="loginBtn" type="submit">Log in</button>
+          <button class="btn btn-secondary" id="logoutBtn" type="button">Log out</button>
+        </div>
+        <p class="status-text" id="authNote">Log in to access the admin form.</p>
+      </form>
+    </section>
+
+    <section class="panel admin-form-panel">
+      <div class="panel-head">
+        <p class="section-tag">Person details</p>
+        <h2>Create a client record</h2>
+      </div>
+
+      <form class="form-grid admin-form" id="adminForm">
+        <label>
+          Full name
+          <input type="text" id="fullName" placeholder="John Doe" required />
+        </label>
+        <label>
+          ID number
+          <input type="text" id="idNumber" placeholder="ID-1002" required />
+        </label>
+        <label>
+          Passport / national ID
+          <input type="text" id="documentType" placeholder="Passport" required />
+        </label>
+        <label>
+          Country
+          <input type="text" id="country" placeholder="Ghana" required />
+        </label>
+        <label>
+          Date of birth
+          <input type="date" id="dob" required />
+        </label>
+        <label>
+          Expiry date
+          <input type="date" id="expiry" required />
+        </label>
+        <label class="full">
+          Address
+          <textarea id="address" rows="3" placeholder="Street, city, state" required></textarea>
+        </label>
+        <label class="full">
+          Photo URL
+          <input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg" />
+        </label>
+        <div class="button-row full">
+          <button class="btn btn-primary" type="submit">Save person</button>
+          <button class="btn btn-secondary" type="button" id="seedDemo">Load demo person</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel admin-preview-panel">
+      <div class="panel-head">
+        <p class="section-tag">Issued code</p>
+        <h2>Client QR card</h2>
+      </div>
+
+      <div class="issued-card">
+        <div class="result-card-head">
+          <div class="avatar" id="previewAvatar">A</div>
+          <div>
+            <h3 id="previewName">Ada Okafor</h3>
+            <p id="previewRole">Passport</p>
+          </div>
+          <span class="badge" id="previewStatus">Verified</span>
+        </div>
+        <div class="barcode" id="barcodePreview"></div>
+        <div class="detail-grid compact">
+          <div><span>ID Number</span><strong id="previewId">ID-0001</strong></div>
+          <div><span>Country</span><strong id="previewCountry">Nigeria</strong></div>
+          <div><span>Expiry</span><strong id="previewExpiry">2028-08-12</strong></div>
+        </div>
+        <div class="share-block">
+          <div class="share-block-head">
+            <span class="share-label">Client QR</span>
+            <span class="share-note">This is what the client scans</span>
+          </div>
+          <img id="shareQr" class="share-qr" alt="Client QR code" />
+          <a id="shareLink" class="share-link" href="?id=ID-0001">https://example.com/?id=ID-0001</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-head">
+        <p class="section-tag">Stored records</p>
+        <h2>Saved people</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>ID</th>
+              <th>Country</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="recordsTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/client.js"></script>
+</body>
+</html>

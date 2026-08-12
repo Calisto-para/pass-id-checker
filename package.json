@@ -1,0 +1,13 @@
+{
+  "name": "id-verification-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simple ID verification site with admin login, barcode scanning, and file-backed storage.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "pg": "^8.12.0"
+  }
+}

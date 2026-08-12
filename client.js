@@ -213,6 +213,7 @@ async function loadState() {
     renderRecord(initial);
     setAuthState(Boolean(session.authenticated));
   } else {
+    if (els.scanInput) els.scanInput.value = "";
     showResult(null);
     initClientLookup();
   }

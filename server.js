@@ -306,22 +306,102 @@ function createQrMatrix(text) {
   return matrix;
 }
 
-function qrSvg(text) {
-  const matrix = createQrMatrix(text);
-  const size = matrix.length;
-  const margin = 4;
-  const viewSize = size + margin * 2;
+const code39Patterns = {
+  "0": "nnnwwnwnn",
+  "1": "wnnwnnnnw",
+  "2": "nnwwnnnnw",
+  "3": "wnwwnnnnn",
+  "4": "nnnwwnnnw",
+  "5": "wnnwwnnnn",
+  "6": "nnwwwnnnn",
+  "7": "nnnwnnwnw",
+  "8": "wnnwnnwnn",
+  "9": "nnwwnnwnn",
+  "A": "wnnnnwnnw",
+  "B": "nnwnnwnnw",
+  "C": "wnwnnwnnn",
+  "D": "nnnnwwnnw",
+  "E": "wnnnwwnnn",
+  "F": "nnwnwwnnn",
+  "G": "nnnnnwwnw",
+  "H": "wnnnnwwnn",
+  "I": "nnwnnwwnn",
+  "J": "nnnnwwwnn",
+  "K": "wnnnnnnww",
+  "L": "nnwnnnnww",
+  "M": "wnwnnnnwn",
+  "N": "nnnnwnnww",
+  "O": "wnnnwnnwn",
+  "P": "nnwnwnnwn",
+  "Q": "nnnnnnwww",
+  "R": "wnnnnnwwn",
+  "S": "nnwnnnwwn",
+  "T": "nnnnwnwwn",
+  "U": "wwnnnnnnw",
+  "V": "nwwnnnnnw",
+  "W": "wwwnnnnnn",
+  "X": "nwnnwnnnw",
+  "Y": "wwnnwnnnn",
+  "Z": "nwwnwnnnn",
+  "-": "nwnnnnwnw",
+  ".": "wwnnnnwnn",
+  " ": "nwwnnnwnn",
+  "*": "nwnnwnwnn",
+  "$": "nwnwnwnnn",
+  "/": "nwnwnnnwn",
+  "+": "nwnnnwnwn",
+  "%": "nnnwnwnwn"
+};
+
+function code39Svg(text) {
+  const content = String(text || "").trim().toUpperCase();
+  const allowed = /^[0-9A-Z\-\. \$\/\+%]*$/;
+  if (!allowed.test(content)) {
+    throw new Error("Barcode content contains unsupported characters");
+  }
+
+  const encoded = `*${content}*`;
+  const narrow = 2;
+  const wide = 6;
+  const gap = narrow;
+  const quiet = 10;
+  const height = 72;
+
+  const widths = [];
+  for (let i = 0; i < encoded.length; i++) {
+    const pattern = code39Patterns[encoded[i]];
+    if (!pattern) {
+      throw new Error(`Invalid barcode character: ${encoded[i]}`);
+    }
+    for (const ch of pattern) {
+      widths.push(ch === "n" ? narrow : wide);
+    }
+    if (i < encoded.length - 1) {
+      widths.push(gap);
+    }
+  }
+
+  const totalWidth = quiet * 2 + widths.reduce((sum, width) => sum + width, 0);
+  let cursor = quiet;
+  let barIndex = 0;
   let shapes = "";
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      if (matrix[y][x]) {
-        shapes += `<rect x="${x + margin}" y="${y + margin}" width="1" height="1" />`;
+  for (let i = 0; i < encoded.length; i++) {
+    const pattern = code39Patterns[encoded[i]];
+    for (let j = 0; j < pattern.length; j++) {
+      const width = pattern[j] === "n" ? narrow : wide;
+      if (j % 2 === 0) {
+        shapes += `<rect x="${cursor}" y="0" width="${width}" height="${height}" />`;
       }
+      cursor += width;
+      barIndex++;
+    }
+    if (i < encoded.length - 1) {
+      cursor += gap;
     }
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewSize} ${viewSize}" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${height}" shape-rendering="crispEdges">
   <rect width="100%" height="100%" fill="#ffffff"/>
   <g fill="#000000">${shapes}</g>
 </svg>`;
@@ -460,10 +540,10 @@ async function handleRequest(req, res) {
     return;
   }
 
-  if (req.method === "GET" && pathname.startsWith("/api/qr/") && pathname.endsWith(".svg")) {
-    const id = decodeURIComponent(pathname.replace("/api/qr/", "").replace(".svg", ""));
+  if (req.method === "GET" && pathname.startsWith("/api/barcode/") && pathname.endsWith(".svg")) {
+    const id = decodeURIComponent(pathname.replace("/api/barcode/", "").replace(".svg", ""));
     try {
-      const svg = qrSvg(id);
+      const svg = code39Svg(id);
       res.writeHead(200, { "Content-Type": "image/svg+xml; charset=utf-8" });
       res.end(svg);
     } catch (error) {

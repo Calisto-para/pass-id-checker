@@ -114,7 +114,7 @@ function renderBarcode(target, value) {
   if (!target) return;
   const code = encodeURIComponent(normalizeId(value));
   target.innerHTML = `
-    <img class="scan-code" src="/api/qr/${code}.svg" alt="Scannable QR code" />
+    <img class="scan-code" src="/api/barcode/${code}.svg" alt="Scannable barcode" />
     <div class="scan-code-label">${escapeHtml(normalizeId(value))}</div>
   `;
 }
@@ -147,7 +147,7 @@ function renderQr(idNumber) {
   const link = `${origin}/?id=${encodeURIComponent(idNumber)}`;
   els.shareLink.textContent = link;
   els.shareLink.href = link;
-  els.shareQr.src = `/api/qr/${encodeURIComponent(idNumber)}.svg`;
+  els.shareQr.src = `/api/barcode/${encodeURIComponent(idNumber)}.svg`;
 }
 
 function renderRecord(record) {
@@ -215,7 +215,6 @@ async function loadState() {
   } else {
     showResult(null);
     initClientLookup();
-    syncRequestedId();
   }
 }
 
@@ -393,17 +392,6 @@ async function scanLoop() {
     }
   } catch {}
   cameraLoop = setTimeout(scanLoop, 250);
-}
-
-function syncRequestedId() {
-  const requestedId = new URL(window.location.href).searchParams.get("id");
-  if (!requestedId) return;
-  const record = findRecord(requestedId);
-  if (record) {
-    els.scanInput.value = record.idNumber;
-    showResult(record);
-    renderRecord(record);
-  }
 }
 
 function renderAdminActions() {

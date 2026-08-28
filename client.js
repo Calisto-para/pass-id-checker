@@ -41,7 +41,7 @@ function renderQr(idNumber){
   if(!els.shareQr || !els.shareLink) return;
   const link=`${origin}/?id=${encodeURIComponent(idNumber)}`;
   els.shareLink.href=link; els.shareLink.textContent=link;
-  els.shareQr.src=`/api/qr/${encodeURIComponent(idNumber)}.svg`;
+  els.shareQr.src=`/api/qr/${encodeURIComponent(idNumber)}.svg`; els.shareQr.onerror=()=>{ els.shareQr.alt="QR code temporarily unavailable"; els.shareQr.removeAttribute("src"); };
 }
 function renderRecord(record){
   if(!record){

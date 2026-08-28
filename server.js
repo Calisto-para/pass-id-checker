@@ -660,20 +660,20 @@ async function handleRequest(req, res) {
 
   if (req.method === "GET" && pathname.startsWith("/api/qr/") && pathname.endsWith(".svg")) {
     const id = decodeURIComponent(pathname.replace("/api/qr/", "").replace(".svg", ""));
-    try {
-      const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim();
-      const protocol = forwardedProto || (req.socket.encrypted ? "https" : "http");
-      const host = req.headers.host;
-      const verificationUrl = `${protocol}://${host}/?id=${encodeURIComponent(id)}`;
-      const svg = qrSvg(verificationUrl);
-      res.writeHead(200, {
-        "Content-Type": "image/svg+xml; charset=utf-8",
-        "Cache-Control": "public, max-age=300"
-      });
-      res.end(svg);
-    } catch (error) {
-      sendJson(res, 400, { error: error.message });
-    }
+    const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim();
+    const protocol = forwardedProto || (req.socket.encrypted ? "https" : "http");
+    const host = req.headers.host;
+    const verificationUrl = `${protocol}://${host}/?id=${encodeURIComponent(id)}`;
+
+    // Generate a standards-compliant QR code using a hosted QR renderer.
+    // The QR itself contains the complete verification URL, so scanning it
+    // opens this site's verification page immediately.
+    const qrServiceUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data=${encodeURIComponent(verificationUrl)}`;
+    res.writeHead(302, {
+      "Location": qrServiceUrl,
+      "Cache-Control": "public, max-age=300"
+    });
+    res.end();
     return;
   }
 

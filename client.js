@@ -9,7 +9,7 @@ const els = Object.fromEntries([
   "clearForm","recordsTable","recordCount","tableEmpty","scanInput","clearInput","lookupBtn","cameraBtn","cameraNote",
   "resultBody","emptyState","resultAvatar","resultPhoto","resultName","resultDocument","resultStatus","resultBarcode",
   "resultId","resultCountry","resultNationality","resultSex","resultDob","resultPlaceOfBirth","resultIssueDate","resultExpiry","resultIssuingAuthority","resultAddress","resultOutcome","resultCheckedId","verificationBanner","verificationIcon","verificationTitle","verificationMessage","emptyTitle","emptyMessage","startCameraBtn","stopCameraBtn","cameraFeed",
-  "cameraState","cameraPlaceholder"
+  "cameraState","cameraPlaceholder","downloadVerificationBtn"
 ].map(id => [id, document.getElementById(id)]));
 
 let records = [];
@@ -78,13 +78,14 @@ function getRecordOutcome(record){
     if (expiry < new Date()) return { label:"Expired", tone:"expired", title:"Record expired", message:"This record was found, but its stated validity period has ended." };
   }
   if (String(record?.status || "").toLowerCase() !== "approved") return { label:"Not approved", tone:"invalid", title:"Record not approved", message:"A matching record was found, but it is not currently approved for verification." };
-  return { label:"Valid", tone:"valid", title:"Record verified", message:"This reference matches an approved record and is currently within its stated validity period." };
+  return { label: String(record?.documentType || "Passport").toLowerCase().includes("passport") ? "Valid passport" : "Valid", tone:"valid", title:"Record verified", message:"This reference matches an approved record and is currently within its stated validity period." };
 }
 function showResult(record){
   if(!els.resultBody || !els.emptyState) return;
   if(!record){
     els.emptyState.classList.remove("hidden"); els.resultBody.classList.add("hidden");
     setEmptyState("No matching record", "No approved record was found for that reference. Check the number and try again.");
+    els.downloadVerificationBtn?.classList.add("hidden");
     return;
   }
   els.emptyState.classList.add("hidden"); els.resultBody.classList.remove("hidden");
@@ -105,7 +106,29 @@ function showResult(record){
   els.resultStatus?.classList.remove("badge-valid","badge-expired","badge-invalid");
   els.resultStatus?.classList.add(`badge-${outcome.tone}`);
   renderBarcode(els.resultBarcode,record.idNumber);
+  els.downloadVerificationBtn?.classList.remove("hidden");
 }
+function downloadVerificationSummary(record){
+  if(!record) return;
+  const outcome=getRecordOutcome(record);
+  const safe=v=>escapeHtml(v == null || v === "" ? "—" : v);
+  const date=v=>safe(formatDate(v));
+  const photo=String(record.photoUrl||"").trim();
+  const id=normalizeId(record.idNumber);
+  const origin=window.location.origin;
+  const verificationUrl=`${origin}/?id=${encodeURIComponent(id)}`;
+  const qrUrl=`${origin}/api/qr/${encodeURIComponent(id)}.svg`;
+  const photoHtml=photo
+    ? `<img class="photo" src="${safe(photo)}" alt="Verification photo">`
+    : `<div class="photo placeholder">${safe(initials(record.fullName))}</div>`;
+  const tone=outcome.tone;
+  const cardHtml=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Verification Credential — ${safe(id)}</title><style>
+  *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#10233d}body{background:#edf2f6;padding:24px;display:grid;place-items:center}.sheet{width:min(920px,100%)}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 16px}.toolbar h1{font-size:16px;margin:0}.toolbar button{border:0;border-radius:10px;padding:10px 14px;background:#12304d;color:#fff;font-weight:800;cursor:pointer}.card{width:100%;max-width:856px;aspect-ratio:85.6/54;min-height:340px;margin:auto;border:1px solid #cbd7e1;border-radius:22px;background:#fff;overflow:hidden;box-shadow:0 18px 50px rgba(16,35,61,.14);position:relative}.head{height:22%;background:linear-gradient(135deg,#102c48,#174c63);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}.brand{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.credential{font-size:10px;opacity:.78;margin-top:4px}.status{padding:7px 11px;border-radius:999px;background:#eaf8f0;color:#176f47;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}.status.expired{background:#fff4e8;color:#9a5c00}.status.invalid{background:#fdecec;color:#a12b2b}.body{display:grid;grid-template-columns:112px 1fr 116px;gap:18px;padding:20px 24px;height:78%;align-items:start}.photo{width:104px;height:128px;border-radius:14px;object-fit:cover;border:1px solid #cad6df;background:#eef3f7}.placeholder{display:grid;place-items:center;font-size:28px;font-weight:900;color:#597087}.name{font-size:23px;font-weight:900;line-height:1.1;margin-bottom:5px}.type{font-size:11px;color:#68798b;font-weight:700;margin-bottom:15px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px}.field{min-width:0}.label{font-size:8px;font-weight:900;color:#758699;letter-spacing:.08em;text-transform:uppercase}.value{font-size:11px;font-weight:800;margin-top:3px;overflow-wrap:anywhere}.qr{width:104px;height:104px;border:1px solid #d6e0e7;border-radius:10px;padding:7px;background:#fff}.qr-label{font-size:8px;color:#718194;text-align:center;margin-top:6px;font-weight:800}.ref{position:absolute;right:24px;bottom:14px;font-size:9px;color:#738396;font-weight:800;letter-spacing:.05em}.notice{margin-top:14px;padding:10px 12px;border:1px solid #e0b56a;background:#fff8e9;border-radius:10px;color:#725000;font-size:9px;font-weight:900;text-align:center;letter-spacing:.03em}.print-note{margin-top:14px;text-align:center;color:#68798b;font-size:11px}.card-link{display:block;color:inherit;text-decoration:none}@media(max-width:650px){body{padding:12px}.toolbar{align-items:flex-start}.card{aspect-ratio:auto;min-height:0}.head{height:auto;padding:16px 18px}.body{height:auto;grid-template-columns:82px 1fr;gap:14px;padding:16px 18px}.photo{width:78px;height:98px}.name{font-size:17px}.grid{grid-template-columns:1fr}.qr-wrap{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:4px}.qr{width:78px;height:78px}.ref{position:static;grid-column:1/-1}.notice{margin:0 18px 16px}.print-note{font-size:10px}}@media print{body{background:#fff;padding:0}.toolbar,.print-note{display:none}.sheet{width:100%}.card{max-width:none;box-shadow:none;border:1px solid #aebbc6;break-inside:avoid}.notice{margin:10px 18px}.card:after{content:"";position:absolute;inset:0;border:1px solid rgba(255,255,255,.35);pointer-events:none}}@page{size:auto;margin:10mm}
+  </style></head><body><main class="sheet"><div class="toolbar"><h1>Verification credential</h1><button type="button" onclick="window.print()">Print / Save as PDF</button></div><section class="card"><header class="head"><div><div class="brand">Private verification service</div><div class="credential">Passport verification record</div></div><div class="status ${tone==='expired'?'expired':tone==='invalid'?'invalid':''}">${safe(outcome.label)}</div></header><div class="body">${photoHtml}<div><div class="name">${safe(record.fullName)}</div><div class="type">${safe(record.documentType)}</div><div class="grid"><div class="field"><div class="label">Document number</div><div class="value">${safe(record.idNumber)}</div></div><div class="field"><div class="label">Issuing country</div><div class="value">${safe(record.country)}</div></div><div class="field"><div class="label">Nationality</div><div class="value">${safe(record.nationality)}</div></div><div class="field"><div class="label">Date of birth</div><div class="value">${date(record.dob)}</div></div><div class="field"><div class="label">Issue date</div><div class="value">${date(record.issueDate)}</div></div><div class="field"><div class="label">Expiry date</div><div class="value">${date(record.expiry)}</div></div><div class="field"><div class="label">Place of birth</div><div class="value">${safe(record.placeOfBirth)}</div></div><div class="field"><div class="label">Issuing authority</div><div class="value">${safe(record.issuingAuthority)}</div></div></div></div><div class="qr-wrap"><div><img class="qr" src="${safe(qrUrl)}" alt="Verification QR code"><div class="qr-label">Scan to verify</div></div></div><div class="ref">REF ${safe(id)}</div></div><div class="notice">PRIVATE VERIFICATION CREDENTIAL — NOT GOVERNMENT-ISSUED</div></section><div class="print-note">This credential links back to the live verification record at <a class="card-link" href="${safe(verificationUrl)}">${safe(verificationUrl)}</a>.</div></main></body></html>`;
+  const blob=new Blob([cardHtml],{type:"text/html;charset=utf-8"});
+  const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`verification-credential-${id||"record"}.html`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
 async function fetchJson(path, options={}){
   const response=await fetch(`${API_BASE}${path}`,{credentials:"include",headers:{"Content-Type":"application/json",...(options.headers||{})},...options});
   const data=await response.json().catch(()=>({}));
@@ -310,3 +333,5 @@ async function loadAdmin(){
 }
 renderAdminActions();
 if(isAdminPage || isAdminDashboard) loadAdmin(); else loadClient();
+
+if(els.downloadVerificationBtn){ els.downloadVerificationBtn.addEventListener("click",()=>{ const id=normalizeId(els.resultCheckedId?.textContent||""); const record=records.find(r=>normalizeId(r.idNumber)===id); if(record) downloadVerificationSummary(record); else fetchRecord(id).then(downloadVerificationSummary).catch(()=>{}); }); }

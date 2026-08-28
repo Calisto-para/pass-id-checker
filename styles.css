@@ -325,3 +325,5 @@ img, svg, video { max-width:100%; }
   .detail-grid div { padding: 10px; }
   .detail-grid strong { font-size: 11px; }
 }
+.result-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.btn-download{white-space:nowrap}.btn-download.hidden{display:none!important}
+@media(max-width:520px){.result-actions{width:100%;justify-content:stretch}.result-actions .secure-label{display:inline-flex;flex:1}.result-actions .btn-download{flex:1;min-width:0}.panel-head{align-items:flex-start!important}.result-panel .identity-person{max-width:100%}.result-panel .identity-person h3{white-space:normal;overflow-wrap:anywhere;line-height:1.2}.result-panel .identity-head{align-items:flex-start;flex-wrap:wrap}.result-panel .badge{margin-left:auto}.result-panel .detail-grid>div{min-width:0}.result-panel .detail-grid strong{overflow-wrap:anywhere}}

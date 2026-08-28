@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0b1728" />
-  <title>VerifyID | Staff Portal</title>
+  <title>VerifyID | Management Console</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -14,30 +14,30 @@
   <header class="site-header">
     <a class="brand" href="/" aria-label="VerifyID home">
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 19 6v5.3c0 4.6-2.9 8.1-7 9.7-4.1-1.6-7-5.1-7-9.7V6l7-3Z" stroke="currentColor" stroke-width="1.8"/><path d="m8.5 12 2.2 2.2 4.8-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      <span><strong>VerifyID</strong><small>Staff portal</small></span>
+      <span><strong>VerifyID</strong><small>Management console</small></span>
     </a>
-    <a class="header-link" href="/">← Back to verification</a>
+    <a class="header-link" href="/">← Public verification</a>
   </header>
 
   <main class="admin-main">
     <section class="admin-login hero-card">
       <div class="admin-intro">
-        <span class="eyebrow">Staff access</span>
-        <h1>Manage approved records.</h1>
-        <p>Create, update and issue verification records from one secure workspace.</p>
+        <span class="eyebrow">Restricted access</span>
+        <h1>Manage verification records.</h1>
+        <p>Create, update and remove approved records from this secure management console.</p>
       </div>
       <form class="login-card" id="loginForm">
-        <div class="card-title"><div class="title-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7"/></svg></div><div><strong>Sign in</strong><span>Authorised staff only</span></div></div>
-        <label for="adminPassword">Admin password</label>
-        <input type="password" id="adminPassword" autocomplete="current-password" placeholder="Enter your password" />
+        <div class="card-title"><div class="title-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7"/></svg></div><div><strong>Secure sign-in</strong><span>Authorised access only</span></div></div>
+        <label for="adminPassword">Access password</label>
+        <input type="password" id="adminPassword" autocomplete="current-password" placeholder="Enter your access password" />
         <div class="button-row"><button class="btn btn-primary" id="loginBtn" type="submit">Sign in</button><button class="btn btn-secondary" id="logoutBtn" type="button">Sign out</button></div>
-        <p class="form-status" id="authNote">Sign in to access the staff workspace.</p>
+        <p class="form-status" id="authNote">Sign in to access the management console.</p>
       </form>
     </section>
 
     <div class="admin-workspace admin-only hidden">
       <section class="panel admin-form-panel">
-        <div class="panel-head"><div><span class="section-label">Record details</span><h2>Create or update a record</h2></div><span class="secure-label">Staff only</span></div>
+        <div class="panel-head"><div><span class="section-label">Record details</span><h2>Create or update a record</h2></div><span class="secure-label">Restricted</span></div>
         <form class="form-grid admin-form" id="adminForm">
           <label>Full name<input type="text" id="fullName" placeholder="John Doe" required /></label>
           <label>Reference number<input type="text" id="idNumber" placeholder="ID-1002" required /></label>
@@ -49,7 +49,7 @@
           <label class="full">Photo URL<input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg" /></label>
           <label class="full file-label">Upload photo<input type="file" id="photoFile" accept="image/*" /><span class="file-help">Use a clear, front-facing image. A URL or uploaded image can be used.</span></label>
           <div class="photo-dropzone full"><div><strong>Photo preview</strong><span>Preview before saving.</span></div><img id="photoFormPreview" class="photo-form-preview hidden" alt="Selected photo preview" /></div>
-          <div class="button-row full"><button class="btn btn-primary" type="submit">Save approved record</button><button class="btn btn-secondary" type="button" id="seedDemo">Load demo</button></div>
+          <div class="button-row full"><button class="btn btn-primary" type="submit">Save record</button><button class="btn btn-secondary" type="button" id="clearForm">Clear form</button></div>
         </form>
       </section>
 
@@ -64,12 +64,12 @@
       </section>
 
       <section class="panel table-panel">
-        <div class="panel-head"><div><span class="section-label">Records</span><h2>Saved approved records</h2></div><span class="record-count" id="recordCount">0 records</span></div>
-        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Reference</th><th>Country</th><th>Status</th></tr></thead><tbody id="recordsTable"></tbody></table><div class="table-empty hidden" id="tableEmpty">No records have been saved yet.</div></div>
+        <div class="panel-head"><div><span class="section-label">Record management</span><h2>Approved records</h2></div><span class="record-count" id="recordCount">0 records</span></div>
+        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Reference</th><th>Country</th><th>Status</th><th>Action</th></tr></thead><tbody id="recordsTable"></tbody></table><div class="table-empty hidden" id="tableEmpty">No approved records are currently stored.</div></div>
       </section>
     </div>
   </main>
-  <footer class="site-footer"><span>VerifyID Staff Portal</span><span>Keep account credentials private</span></footer>
+  <footer class="site-footer"><span>VerifyID Management Console</span><span>Keep access credentials private</span></footer>
   <script src="/client.js"></script>
 </body>
 </html>

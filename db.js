@@ -89,6 +89,14 @@ async function findRecordById(idNumber) {
   return rows[0] ? mapRecord(rows[0]) : null;
 }
 
+async function deleteRecord(idNumber) {
+  const { rowCount } = await pool.query(
+    `DELETE FROM records WHERE UPPER(id_number) = $1`,
+    [normalizeId(idNumber)]
+  );
+  return rowCount > 0;
+}
+
 async function upsertRecord(record) {
   const normalized = normalizeRecord(record);
   const { rows } = await pool.query(
@@ -129,5 +137,6 @@ module.exports = {
   initDb,
   listRecords,
   findRecordById,
-  upsertRecord
+  upsertRecord,
+  deleteRecord
 };

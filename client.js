@@ -1,17 +1,11 @@
 const API_BASE = "";
 const isAdminPage = document.body.classList.contains("admin-page");
 
-const seedRecord = {
-  fullName: "Olena Shevchenko", idNumber: "ID-0001", documentType: "Passport",
-  country: "Ukraine", dob: "1998-01-14", expiry: "2028-08-12",
-  address: "Kyiv, Ukraine", photoUrl: "", status: "Approved"
-};
-
 const els = Object.fromEntries([
   "previewAvatar","previewPhoto","previewName","previewRole","previewId","previewStatus","previewCountry","previewExpiry",
   "barcodePreview","shareQr","shareLink","loginForm","adminPassword","loginBtn","logoutBtn","authNote","adminForm",
   "fullName","idNumber","documentType","country","dob","expiry","address","photoUrl","photoFile","photoFormPreview",
-  "seedDemo","recordsTable","recordCount","tableEmpty","scanInput","clearInput","lookupBtn","cameraBtn","cameraNote",
+  "clearForm","recordsTable","recordCount","tableEmpty","scanInput","clearInput","lookupBtn","cameraBtn","cameraNote",
   "resultBody","emptyState","resultAvatar","resultPhoto","resultName","resultDocument","resultStatus","resultBarcode",
   "resultId","resultCountry","resultDob","resultExpiry","resultAddress","startCameraBtn","stopCameraBtn","cameraFeed",
   "cameraState","cameraPlaceholder"
@@ -49,7 +43,20 @@ function renderQr(idNumber){
   els.shareQr.src=`/api/qr/${encodeURIComponent(idNumber)}.svg`;
 }
 function renderRecord(record){
-  if(!record) return;
+  if(!record){
+    if(els.previewName) els.previewName.textContent="—";
+    if(els.previewRole) els.previewRole.textContent="—";
+    if(els.previewId) els.previewId.textContent="—";
+    if(els.previewStatus) els.previewStatus.textContent="Approved";
+    if(els.previewCountry) els.previewCountry.textContent="—";
+    if(els.previewExpiry) els.previewExpiry.textContent="—";
+    if(els.previewAvatar){els.previewAvatar.textContent="ID";els.previewAvatar.classList.remove("hidden");}
+    if(els.previewPhoto){els.previewPhoto.removeAttribute("src");els.previewPhoto.classList.add("hidden");}
+    if(els.barcodePreview) els.barcodePreview.innerHTML="<span class=\"scan-code-label\">No record selected</span>";
+    if(els.shareQr){els.shareQr.removeAttribute("src");}
+    if(els.shareLink){els.shareLink.removeAttribute("href");els.shareLink.textContent="No record selected";}
+    return;
+  }
   if(els.previewName){
     els.previewName.textContent=record.fullName; els.previewRole.textContent=record.documentType;
     els.previewId.textContent=record.idNumber; els.previewStatus.textContent=record.status;
@@ -147,7 +154,7 @@ async function scanLoop(){
 
 function renderTable(){
   if(!els.recordsTable) return;
-  els.recordsTable.innerHTML=records.map(r=>`<tr><td><strong>${escapeHtml(r.fullName)}</strong></td><td>${escapeHtml(r.idNumber)}</td><td>${escapeHtml(r.country)}</td><td><span class="badge">${escapeHtml(r.status)}</span></td></tr>`).join("");
+  els.recordsTable.innerHTML=records.map(r=>`<tr><td><strong>${escapeHtml(r.fullName)}</strong></td><td>${escapeHtml(r.idNumber)}</td><td>${escapeHtml(r.country)}</td><td><span class="badge">${escapeHtml(r.status)}</span></td><td><button class="table-action table-edit" type="button" data-action="edit" data-id="${escapeHtml(r.idNumber)}">Edit</button><button class="table-action table-delete" type="button" data-action="delete" data-id="${escapeHtml(r.idNumber)}">Delete</button></td></tr>`).join("");
   els.tableEmpty?.classList.toggle("hidden",records.length>0);
   if(els.recordCount) els.recordCount.textContent=`${records.length} ${records.length===1?"record":"records"}`;
 }
@@ -165,7 +172,7 @@ function setAuthState(authenticated){
   if(!isAdminPage) return;
   session.authenticated=authenticated;
   document.querySelectorAll(".admin-only").forEach(s=>s.classList.toggle("hidden",!authenticated));
-  if(els.authNote) els.authNote.textContent=authenticated ? "Signed in. Your staff workspace is ready." : "Sign in to access the staff workspace.";
+  if(els.authNote) els.authNote.textContent=authenticated ? "Access granted. The management console is ready." : "Sign in to access the management console.";
   if(els.adminForm) els.adminForm.querySelectorAll("input,textarea,button").forEach(el=>el.disabled=!authenticated);
   if(els.adminPassword) els.adminPassword.disabled=authenticated;
   if(els.loginBtn) els.loginBtn.disabled=authenticated;
@@ -174,6 +181,20 @@ function setAuthState(authenticated){
 async function saveRecord(record){
   const result=await fetchJson("/api/records",{method:"POST",body:JSON.stringify(record)});
   records=result.records||records; renderTable(); renderRecord(result.record); return result.record;
+}
+async function removeRecord(id){
+  const result=await fetchJson(`/api/records/${encodeURIComponent(id)}`,{method:"DELETE",body:"{}"});
+  records=result.records||[]; renderTable();
+  if(records.length){ fillAdminForm(records[0]); renderRecord(records[0]); }
+  else { clearAdminForm(); renderRecord(null); }
+  return result;
+}
+function clearAdminForm(){
+  if(!isAdminPage || !els.adminForm) return;
+  els.adminForm.reset();
+  if(els.photoUrl) els.photoUrl.value="";
+  if(els.photoFile) els.photoFile.value="";
+  if(els.photoFormPreview){ els.photoFormPreview.removeAttribute("src"); els.photoFormPreview.classList.add("hidden"); }
 }
 function readFileAsDataUrl(file){
   return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(new Error("Unable to read the selected image."));reader.readAsDataURL(file);});
@@ -185,8 +206,10 @@ async function login(event){
     els.adminPassword.value=""; setAuthState(true);
     const response=await fetchJson("/api/records");
     records=response.records||[]; renderTable();
-    const initial=records[0]||seedRecord; renderRecord(initial); fillAdminForm(initial);
-    els.authNote.textContent="Signed in. Your staff workspace is ready.";
+    const initial=records[0];
+    if(initial){ renderRecord(initial); fillAdminForm(initial); }
+    else { clearAdminForm(); renderRecord(null); }
+    els.authNote.textContent="Access granted. The management console is ready.";
   }catch(error){els.authNote.textContent=error.message;els.loginBtn.disabled=false;}
 }
 async function logout(){
@@ -199,7 +222,8 @@ function renderAdminActions(){
   els.adminForm?.addEventListener("submit",async e=>{
     e.preventDefault(); if(!session.authenticated) return;
     const record={fullName:els.fullName.value.trim(),idNumber:normalizeId(els.idNumber.value),documentType:els.documentType.value.trim(),country:els.country.value.trim(),dob:els.dob.value,expiry:els.expiry.value,address:els.address.value.trim(),photoUrl:els.photoUrl.value.trim(),status:"Approved"};
-    if(Object.values(record).some(v=>!v) && !record.photoUrl){els.authNote.textContent="Please complete all required fields.";return;}
+    const requiredFields=["fullName","idNumber","documentType","country","dob","expiry","address"];
+    if(requiredFields.some(field=>!record[field])){els.authNote.textContent="Please complete all required fields before saving.";return;}
     try{const saved=await saveRecord(record);fillAdminForm(saved);els.authNote.textContent="Record saved successfully.";}catch(error){els.authNote.textContent=error.message;}
   });
   els.photoFile?.addEventListener("change",async e=>{
@@ -209,7 +233,26 @@ function renderAdminActions(){
     catch(error){els.authNote.textContent=error.message;}
   });
   els.photoUrl?.addEventListener("input",()=>{const v=els.photoUrl.value.trim();if(v){els.photoFormPreview.src=v;els.photoFormPreview.classList.remove("hidden")}else els.photoFormPreview.classList.add("hidden")});
-  els.seedDemo?.addEventListener("click",()=>{fillAdminForm(seedRecord);renderRecord(seedRecord);els.authNote.textContent="Demo record loaded. Save it only if you want to keep it.";});
+  els.clearForm?.addEventListener("click",()=>{clearAdminForm();els.authNote.textContent="Form cleared. Enter the details for a new record.";});
+  els.recordsTable?.addEventListener("click",async e=>{
+    const button=e.target.closest("button[data-action]");
+    if(!button) return;
+    const id=button.dataset.id||"";
+    if(!id) return;
+    if(button.dataset.action==="edit"){
+      const record=records.find(r=>normalizeId(r.idNumber)===normalizeId(id));
+      if(record){fillAdminForm(record);renderRecord(record);els.authNote.textContent=`Editing ${record.fullName}.`;els.fullName?.focus();}
+      return;
+    }
+    if(button.dataset.action==="delete"){
+      const record=records.find(r=>normalizeId(r.idNumber)===normalizeId(id));
+      const name=record?.fullName||id;
+      if(!window.confirm(`Delete the approved record for ${name}? This will immediately remove it from public verification.`)) return;
+      button.disabled=true;
+      try{await removeRecord(id);els.authNote.textContent="Record deleted successfully.";}
+      catch(error){els.authNote.textContent=error.message;button.disabled=false;}
+    }
+  });
 }
 async function loadAdmin(){
   try{
@@ -218,9 +261,11 @@ async function loadAdmin(){
     if(session.authenticated){
       const response=await fetchJson("/api/records");
       records=response.records||[]; renderTable();
-      const initial=records[0]||seedRecord; renderRecord(initial); fillAdminForm(initial);
+      const initial=records[0];
+      if(initial){ renderRecord(initial); fillAdminForm(initial); }
+      else { clearAdminForm(); renderRecord(null); }
     } else {
-      renderRecord(seedRecord);
+      clearAdminForm();
     }
   }catch(error){setAuthState(false);if(els.authNote)els.authNote.textContent=error.message;}
 }

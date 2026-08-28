@@ -2,7 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { initDb, listRecords, findRecordById, upsertRecord } = require("./db");
+const { initDb, listRecords, findRecordById, upsertRecord, deleteRecord } = require("./db");
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === "production" ? "" : "admin123");
@@ -562,6 +562,28 @@ async function handleRequest(req, res) {
     const saved = await upsertRecord(record);
     const records = await listRecords();
     sendJson(res, 200, { record: saved, records });
+    return;
+  }
+
+  if (req.method === "DELETE" && pathname.startsWith("/api/records/")) {
+    if (!isAuthenticated(req)) {
+      sendJson(res, 401, { error: "Management access is required" });
+      return;
+    }
+
+    const id = decodeURIComponent(pathname.replace("/api/records/", ""));
+    if (!id) {
+      sendJson(res, 400, { error: "A record reference is required" });
+      return;
+    }
+
+    const deleted = await deleteRecord(id);
+    if (!deleted) {
+      sendJson(res, 404, { error: "Record not found" });
+      return;
+    }
+
+    sendJson(res, 200, { deleted: true, records: await listRecords() });
     return;
   }
 

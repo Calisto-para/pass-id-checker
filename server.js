@@ -470,7 +470,17 @@ async function handleRequest(req, res) {
   }
 
   if (req.method === "GET" && pathname === "/admin.html") {
+    res.setHeader("Cache-Control", "no-store");
     sendFile(res, path.join(__dirname, "admin.html"));
+    return;
+  }
+
+  // The authenticated management workspace is a separate page from the
+  // sign-in screen. Keeping an explicit route here prevents Render from
+  // falling through to the JSON 404 handler after a successful login.
+  if (req.method === "GET" && pathname === "/admin-dashboard.html") {
+    res.setHeader("Cache-Control", "no-store");
+    sendFile(res, path.join(__dirname, "admin-dashboard.html"));
     return;
   }
 

@@ -223,3 +223,105 @@ img, svg, video { max-width:100%; }
   .result-meta>span{align-items:flex-start;flex-direction:column;gap:4px}
   .result-meta small{text-align:left}
 }
+
+/* Public verification result: mobile-first fit for narrow screens */
+.result-body,
+.result-panel,
+.result-body > *,
+.result-meta,
+.detail-grid,
+.identity-head,
+.identity-person,
+.issued-top { min-width: 0; max-width: 100%; }
+
+@media (max-width: 620px) {
+  .result-panel { overflow: hidden; }
+  .result-panel .panel-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .result-panel .panel-head h2 {
+    font-size: 19px;
+    line-height: 1.2;
+  }
+  .result-body { gap: 12px; }
+  .identity-head {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .identity-person {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .identity-person > div { min-width: 0; }
+  .identity-person h3 {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .identity-person p {
+    overflow-wrap: anywhere;
+  }
+  .identity-head .badge {
+    margin-left: 58px;
+    margin-top: -4px;
+  }
+  .verification-banner {
+    align-items: flex-start;
+    padding: 11px;
+  }
+  .verification-banner > div { min-width: 0; }
+  .verification-banner strong,
+  .verification-banner span:not(.check-circle) {
+    overflow-wrap: anywhere;
+  }
+  .barcode {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+  }
+  .scan-code {
+    width: min(100%, 280px);
+    height: auto;
+    max-height: 62px;
+  }
+  .result-meta {
+    grid-template-columns: 1fr;
+  }
+  .result-meta > span {
+    min-width: 0;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 11px;
+  }
+  .result-meta small {
+    max-width: 100%;
+    text-align: left;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .detail-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+  .detail-grid .wide { grid-column: auto; }
+  .detail-grid div {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .detail-grid strong {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 360px) {
+  .result-panel { padding: 14px; }
+  .identity-head .badge { margin-left: 0; }
+  .result-panel .panel-head h2 { font-size: 18px; }
+  .detail-grid div { padding: 10px; }
+  .detail-grid strong { font-size: 11px; }
+}

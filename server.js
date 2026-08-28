@@ -470,7 +470,7 @@ async function handleRequest(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname;
 
-  if (req.method === "GET" && pathname === "/healthz") {
+  if (req.method === "GET" && (pathname === "/healthz" || pathname === "/api/healthz")) {
     sendJson(res, 200, { ok: true, service: "pass-id-checker" });
     return;
   }

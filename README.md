@@ -22,7 +22,7 @@ A small Node.js/PostgreSQL application for creating approved identity records an
    - `ADMIN_PASSWORD` — a strong password for the staff portal.
    - `DATABASE_URL` — your PostgreSQL/Neon connection string.
 4. Deploy with the build command `npm ci` and start command `npm start`.
-5. Render will use `/healthz` as the health check.
+5. Render will use `/api/healthz` (with `/healthz` kept as a backwards-compatible alias) as the health check.
 
 The app intentionally does not create a Render Postgres database automatically. This avoids replacing an existing Neon/Postgres database and avoids the 30-day expiry of Render's free Postgres tier.
 

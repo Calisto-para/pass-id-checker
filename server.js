@@ -435,9 +435,15 @@ function createRecord(input) {
     idNumber: normalizeId(input.idNumber),
     documentType: String(input.documentType || "").trim(),
     country: String(input.country || "").trim(),
+    nationality: String(input.nationality || "").trim(),
+    sex: String(input.sex || "").trim(),
     dob: String(input.dob || "").trim(),
+    placeOfBirth: String(input.placeOfBirth || "").trim(),
+    issueDate: String(input.issueDate || "").trim(),
     expiry: String(input.expiry || "").trim(),
+    issuingAuthority: String(input.issuingAuthority || "").trim(),
     address: String(input.address || "").trim(),
+    verificationNotes: String(input.verificationNotes || "").trim(),
     photoUrl: String(input.photoUrl || "").trim(),
     status: "Approved"
   };
@@ -449,8 +455,13 @@ function validRecord(record) {
     record.idNumber &&
     record.documentType &&
     record.country &&
+    record.nationality &&
+    record.sex &&
     record.dob &&
+    record.placeOfBirth &&
+    record.issueDate &&
     record.expiry &&
+    record.issuingAuthority &&
     record.address
   );
 }

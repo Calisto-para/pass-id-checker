@@ -21,9 +21,15 @@ function normalizeRecord(record) {
     idNumber: normalizeId(record.idNumber),
     documentType: String(record.documentType || "").trim(),
     country: String(record.country || "").trim(),
+    nationality: String(record.nationality || "").trim(),
+    sex: String(record.sex || "").trim(),
     dob: String(record.dob || "").trim(),
+    placeOfBirth: String(record.placeOfBirth || "").trim(),
+    issueDate: String(record.issueDate || "").trim(),
     expiry: String(record.expiry || "").trim(),
+    issuingAuthority: String(record.issuingAuthority || "").trim(),
     address: String(record.address || "").trim(),
+    verificationNotes: String(record.verificationNotes || "").trim(),
     photoUrl: String(record.photoUrl || "").trim(),
     status: String(record.status || "Approved").trim() || "Approved"
   };
@@ -35,15 +41,28 @@ function mapRecord(row) {
     idNumber: row.id_number,
     documentType: row.document_type,
     country: row.country,
+    nationality: row.nationality || "",
+    sex: row.sex || "",
     dob: row.dob,
+    placeOfBirth: row.place_of_birth || "",
+    issueDate: row.issue_date || "",
     expiry: row.expiry,
+    issuingAuthority: row.issuing_authority || "",
     address: row.address,
+    verificationNotes: row.verification_notes || "",
     photoUrl: row.photo_url || "",
     status: row.status || "Approved"
   };
 }
 
-async function initDb(seedRecord) {
+// Public verification deliberately excludes internal verification notes.
+function mapPublicRecord(row) {
+  const record = mapRecord(row);
+  delete record.verificationNotes;
+  return record;
+}
+
+async function initDb() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS records (
       id SERIAL PRIMARY KEY,
@@ -61,15 +80,23 @@ async function initDb(seedRecord) {
     )
   `);
 
-  // Records are intentionally not seeded. The public site should only show
-  // records that an authorised staff member has actually created.
+  // Backward-compatible additions for records created before the expanded
+  // verification form was introduced.
+  await pool.query(`ALTER TABLE records ADD COLUMN IF NOT EXISTS nationality TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE records ADD COLUMN IF NOT EXISTS sex TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE records ADD COLUMN IF NOT EXISTS place_of_birth TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE records ADD COLUMN IF NOT EXISTS issue_date TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE records ADD COLUMN IF NOT EXISTS issuing_authority TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE records ADD COLUMN IF NOT EXISTS verification_notes TEXT NOT NULL DEFAULT ''`);
+
   return true;
 }
 
-
 async function listRecords() {
   const { rows } = await pool.query(`
-    SELECT full_name, id_number, document_type, country, dob, expiry, address, photo_url, status
+    SELECT full_name, id_number, document_type, country, nationality, sex,
+           dob, place_of_birth, issue_date, expiry, issuing_authority, address,
+           verification_notes, photo_url, status
     FROM records
     ORDER BY created_at ASC, id ASC
   `);
@@ -79,14 +106,16 @@ async function listRecords() {
 async function findRecordById(idNumber) {
   const { rows } = await pool.query(
     `
-      SELECT full_name, id_number, document_type, country, dob, expiry, address, photo_url, status
+      SELECT full_name, id_number, document_type, country, nationality, sex,
+             dob, place_of_birth, issue_date, expiry, issuing_authority, address,
+             photo_url, status
       FROM records
       WHERE UPPER(id_number) = $1
       LIMIT 1
     `,
     [normalizeId(idNumber)]
   );
-  return rows[0] ? mapRecord(rows[0]) : null;
+  return rows[0] ? mapPublicRecord(rows[0]) : null;
 }
 
 async function deleteRecord(idNumber) {
@@ -102,30 +131,46 @@ async function upsertRecord(record) {
   const { rows } = await pool.query(
     `
       INSERT INTO records (
-        full_name, id_number, document_type, country, dob, expiry, address, photo_url, status, updated_at
+        full_name, id_number, document_type, country, nationality, sex,
+        dob, place_of_birth, issue_date, expiry, issuing_authority, address,
+        verification_notes, photo_url, status, updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
       ON CONFLICT (id_number)
       DO UPDATE SET
         full_name = EXCLUDED.full_name,
         document_type = EXCLUDED.document_type,
         country = EXCLUDED.country,
+        nationality = EXCLUDED.nationality,
+        sex = EXCLUDED.sex,
         dob = EXCLUDED.dob,
+        place_of_birth = EXCLUDED.place_of_birth,
+        issue_date = EXCLUDED.issue_date,
         expiry = EXCLUDED.expiry,
+        issuing_authority = EXCLUDED.issuing_authority,
         address = EXCLUDED.address,
+        verification_notes = EXCLUDED.verification_notes,
         photo_url = EXCLUDED.photo_url,
         status = EXCLUDED.status,
         updated_at = NOW()
-      RETURNING full_name, id_number, document_type, country, dob, expiry, address, photo_url, status
+      RETURNING full_name, id_number, document_type, country, nationality, sex,
+                dob, place_of_birth, issue_date, expiry, issuing_authority, address,
+                verification_notes, photo_url, status
     `,
     [
       normalized.fullName,
       normalized.idNumber,
       normalized.documentType,
       normalized.country,
+      normalized.nationality,
+      normalized.sex,
       normalized.dob,
+      normalized.placeOfBirth,
+      normalized.issueDate,
       normalized.expiry,
+      normalized.issuingAuthority,
       normalized.address,
+      normalized.verificationNotes,
       normalized.photoUrl,
       normalized.status
     ]

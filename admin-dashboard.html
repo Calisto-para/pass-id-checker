@@ -30,13 +30,21 @@
       <section class="panel admin-form-panel">
         <div class="panel-head"><div><span class="section-label">Record details</span><h2>Create or update a record</h2></div><span class="secure-label">Restricted</span></div>
         <form class="form-grid admin-form" id="adminForm">
-          <label>Full name<input type="text" id="fullName" placeholder="John Doe" required /></label>
-          <label>Reference number<input type="text" id="idNumber" placeholder="ID-1002" required /></label>
+          <div class="form-section-title full"><strong>Identity information</strong><span>Enter the details exactly as verified from the submitted document.</span></div>
+          <label>Full name<input type="text" id="fullName" placeholder="Full legal name" required /></label>
+          <label>Document number<input type="text" id="idNumber" placeholder="Passport or document number" required /></label>
           <label>Document type<input type="text" id="documentType" placeholder="Passport" required /></label>
-          <label>Country<input type="text" id="country" placeholder="Nigeria" required /></label>
+          <label>Issuing country<input type="text" id="country" placeholder="Nigeria" required /></label>
+          <label>Nationality<input type="text" id="nationality" placeholder="Nigerian" required /></label>
+          <label>Sex<input type="text" id="sex" placeholder="Male / Female" required /></label>
           <label>Date of birth<input type="date" id="dob" required /></label>
+          <label>Place of birth<input type="text" id="placeOfBirth" placeholder="City, country" required /></label>
+          <div class="form-section-title full"><strong>Document validity</strong><span>These dates should match the document that was reviewed.</span></div>
+          <label>Date of issue<input type="date" id="issueDate" required /></label>
           <label>Expiry date<input type="date" id="expiry" required /></label>
-          <label class="full">Address<textarea id="address" rows="3" placeholder="Street, city, region" required></textarea></label>
+          <label>Issuing authority<input type="text" id="issuingAuthority" placeholder="Issuing authority" required /></label>
+          <label class="full">Residential address<textarea id="address" rows="3" placeholder="Residential address" required></textarea></label>
+          <label class="full">Verification notes<textarea id="verificationNotes" rows="3" placeholder="Optional internal note about the verification review"></textarea></label>
           <label class="full">Photo URL<input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg" /></label>
           <label class="full file-label">Upload photo<input type="file" id="photoFile" accept="image/*" /><span class="file-help">Use a clear, front-facing image. A URL or uploaded image can be used.</span></label>
           <div class="photo-dropzone full"><div><strong>Photo preview</strong><span>Preview before saving.</span></div><img id="photoFormPreview" class="photo-form-preview hidden" alt="Selected photo preview" /></div>

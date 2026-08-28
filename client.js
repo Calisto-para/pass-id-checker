@@ -5,10 +5,10 @@ const isAdminDashboard = document.body.classList.contains("admin-dashboard-page"
 const els = Object.fromEntries([
   "previewAvatar","previewPhoto","previewName","previewRole","previewId","previewStatus","previewCountry","previewExpiry",
   "barcodePreview","shareQr","shareLink","loginForm","adminPassword","loginBtn","logoutBtn","authNote","adminForm",
-  "fullName","idNumber","documentType","country","dob","expiry","address","photoUrl","photoFile","photoFormPreview",
+  "fullName","idNumber","documentType","country","nationality","sex","dob","placeOfBirth","issueDate","expiry","issuingAuthority","address","verificationNotes","photoUrl","photoFile","photoFormPreview",
   "clearForm","recordsTable","recordCount","tableEmpty","scanInput","clearInput","lookupBtn","cameraBtn","cameraNote",
   "resultBody","emptyState","resultAvatar","resultPhoto","resultName","resultDocument","resultStatus","resultBarcode",
-  "resultId","resultCountry","resultDob","resultExpiry","resultAddress","startCameraBtn","stopCameraBtn","cameraFeed",
+  "resultId","resultCountry","resultNationality","resultSex","resultDob","resultPlaceOfBirth","resultIssueDate","resultExpiry","resultIssuingAuthority","resultAddress","startCameraBtn","stopCameraBtn","cameraFeed",
   "cameraState","cameraPlaceholder"
 ].map(id => [id, document.getElementById(id)]));
 
@@ -73,7 +73,10 @@ function showResult(record){
   els.resultAvatar.textContent=initials(record.fullName); els.resultName.textContent=record.fullName;
   els.resultDocument.textContent=record.documentType; els.resultStatus.textContent=record.status;
   els.resultId.textContent=record.idNumber; els.resultCountry.textContent=record.country;
-  els.resultDob.textContent=formatDate(record.dob); els.resultExpiry.textContent=formatDate(record.expiry);
+  els.resultNationality.textContent=record.nationality||"—"; els.resultSex.textContent=record.sex||"—";
+  els.resultDob.textContent=formatDate(record.dob); els.resultPlaceOfBirth.textContent=record.placeOfBirth||"—";
+  els.resultIssueDate.textContent=formatDate(record.issueDate); els.resultExpiry.textContent=formatDate(record.expiry);
+  els.resultIssuingAuthority.textContent=record.issuingAuthority||"—";
   els.resultAddress.textContent=record.address; renderPhoto(els.resultPhoto,els.resultAvatar,record.photoUrl,record.fullName);
   renderBarcode(els.resultBarcode,record.idNumber);
 }
@@ -162,7 +165,10 @@ function renderTable(){
 function fillAdminForm(record){
   if((!isAdminPage && !isAdminDashboard) || !record) return;
   els.fullName.value=record.fullName; els.idNumber.value=record.idNumber; els.documentType.value=record.documentType;
-  els.country.value=record.country; els.dob.value=record.dob; els.expiry.value=record.expiry; els.address.value=record.address;
+  els.country.value=record.country; els.nationality.value=record.nationality||""; els.sex.value=record.sex||"";
+  els.dob.value=record.dob; els.placeOfBirth.value=record.placeOfBirth||""; els.issueDate.value=record.issueDate||"";
+  els.expiry.value=record.expiry; els.issuingAuthority.value=record.issuingAuthority||""; els.address.value=record.address;
+  els.verificationNotes.value=record.verificationNotes||"";
   els.photoUrl.value=record.photoUrl||""; if(els.photoFile) els.photoFile.value="";
   if(els.photoFormPreview){
     if(record.photoUrl){els.photoFormPreview.src=record.photoUrl;els.photoFormPreview.classList.remove("hidden");}
@@ -218,8 +224,8 @@ function renderAdminActions(){
   els.loginForm?.addEventListener("submit",login); els.logoutBtn?.addEventListener("click",logout);
   els.adminForm?.addEventListener("submit",async e=>{
     e.preventDefault(); if(!session.authenticated) return;
-    const record={fullName:els.fullName.value.trim(),idNumber:normalizeId(els.idNumber.value),documentType:els.documentType.value.trim(),country:els.country.value.trim(),dob:els.dob.value,expiry:els.expiry.value,address:els.address.value.trim(),photoUrl:els.photoUrl.value.trim(),status:"Approved"};
-    const requiredFields=["fullName","idNumber","documentType","country","dob","expiry","address"];
+    const record={fullName:els.fullName.value.trim(),idNumber:normalizeId(els.idNumber.value),documentType:els.documentType.value.trim(),country:els.country.value.trim(),nationality:els.nationality.value.trim(),sex:els.sex.value.trim(),dob:els.dob.value,placeOfBirth:els.placeOfBirth.value.trim(),issueDate:els.issueDate.value,expiry:els.expiry.value,issuingAuthority:els.issuingAuthority.value.trim(),address:els.address.value.trim(),verificationNotes:els.verificationNotes.value.trim(),photoUrl:els.photoUrl.value.trim(),status:"Approved"};
+    const requiredFields=["fullName","idNumber","documentType","country","nationality","sex","dob","placeOfBirth","issueDate","expiry","issuingAuthority","address"];
     if(requiredFields.some(field=>!record[field])){els.authNote.textContent="Please complete all required fields before saving.";return;}
     try{const saved=await saveRecord(record);fillAdminForm(saved);els.authNote.textContent="Record saved successfully.";}catch(error){els.authNote.textContent=error.message;}
   });

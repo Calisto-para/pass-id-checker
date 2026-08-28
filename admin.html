@@ -35,38 +35,9 @@
       </form>
     </section>
 
-    <div class="admin-workspace admin-only hidden">
-      <section class="panel admin-form-panel">
-        <div class="panel-head"><div><span class="section-label">Record details</span><h2>Create or update a record</h2></div><span class="secure-label">Restricted</span></div>
-        <form class="form-grid admin-form" id="adminForm">
-          <label>Full name<input type="text" id="fullName" placeholder="John Doe" required /></label>
-          <label>Reference number<input type="text" id="idNumber" placeholder="ID-1002" required /></label>
-          <label>Document type<input type="text" id="documentType" placeholder="Passport" required /></label>
-          <label>Country<input type="text" id="country" placeholder="Nigeria" required /></label>
-          <label>Date of birth<input type="date" id="dob" required /></label>
-          <label>Expiry date<input type="date" id="expiry" required /></label>
-          <label class="full">Address<textarea id="address" rows="3" placeholder="Street, city, region" required></textarea></label>
-          <label class="full">Photo URL<input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg" /></label>
-          <label class="full file-label">Upload photo<input type="file" id="photoFile" accept="image/*" /><span class="file-help">Use a clear, front-facing image. A URL or uploaded image can be used.</span></label>
-          <div class="photo-dropzone full"><div><strong>Photo preview</strong><span>Preview before saving.</span></div><img id="photoFormPreview" class="photo-form-preview hidden" alt="Selected photo preview" /></div>
-          <div class="button-row full"><button class="btn btn-primary" type="submit">Save record</button><button class="btn btn-secondary" type="button" id="clearForm">Clear form</button></div>
-        </form>
-      </section>
-
-      <section class="panel admin-preview-panel">
-        <div class="panel-head"><div><span class="section-label">Issued verification</span><h2>Client verification card</h2></div><span class="secure-label">Preview</span></div>
-        <div class="issued-card">
-          <div class="issued-top"><div class="identity-person"><img class="profile-photo hidden" id="previewPhoto" alt="Person" /><div class="avatar" id="previewAvatar">ID</div><div><h3 id="previewName">—</h3><p id="previewRole">—</p></div></div><span class="badge" id="previewStatus">Approved</span></div>
-          <div class="barcode" id="barcodePreview"></div>
-          <div class="detail-grid compact"><div><span>Reference</span><strong id="previewId">—</strong></div><div><span>Country</span><strong id="previewCountry">—</strong></div><div><span>Expiry</span><strong id="previewExpiry">—</strong></div></div>
-          <div class="share-block"><div><strong>Public verification QR</strong><span>Share this code or link with the client.</span></div><img id="shareQr" class="share-qr" alt="Public verification QR code" /><a id="shareLink" class="share-link" href="/">—</a></div>
-        </div>
-      </section>
-
-      <section class="panel table-panel">
-        <div class="panel-head"><div><span class="section-label">Record management</span><h2>Approved records</h2></div><span class="record-count" id="recordCount">0 records</span></div>
-        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Reference</th><th>Country</th><th>Status</th><th>Action</th></tr></thead><tbody id="recordsTable"></tbody></table><div class="table-empty hidden" id="tableEmpty">No approved records are currently stored.</div></div>
-      </section>
+    <div class="login-support">
+      <strong>Authorised personnel only</strong>
+      <span>Sign in to continue to the secure records management workspace.</span>
     </div>
   </main>
   <footer class="site-footer"><span>VerifyID Management Console</span><span>Keep access credentials private</span></footer>

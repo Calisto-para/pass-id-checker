@@ -1,5 +1,6 @@
 const API_BASE = "";
 const isAdminPage = document.body.classList.contains("admin-page");
+const isAdminDashboard = document.body.classList.contains("admin-dashboard-page");
 
 const els = Object.fromEntries([
   "previewAvatar","previewPhoto","previewName","previewRole","previewId","previewStatus","previewCountry","previewExpiry",
@@ -159,7 +160,7 @@ function renderTable(){
   if(els.recordCount) els.recordCount.textContent=`${records.length} ${records.length===1?"record":"records"}`;
 }
 function fillAdminForm(record){
-  if(!isAdminPage || !record) return;
+  if((!isAdminPage && !isAdminDashboard) || !record) return;
   els.fullName.value=record.fullName; els.idNumber.value=record.idNumber; els.documentType.value=record.documentType;
   els.country.value=record.country; els.dob.value=record.dob; els.expiry.value=record.expiry; els.address.value=record.address;
   els.photoUrl.value=record.photoUrl||""; if(els.photoFile) els.photoFile.value="";
@@ -169,7 +170,7 @@ function fillAdminForm(record){
   }
 }
 function setAuthState(authenticated){
-  if(!isAdminPage) return;
+  if(!isAdminPage && !isAdminDashboard) return;
   session.authenticated=authenticated;
   document.querySelectorAll(".admin-only").forEach(s=>s.classList.toggle("hidden",!authenticated));
   if(els.authNote) els.authNote.textContent=authenticated ? "Access granted. The management console is ready." : "Sign in to access the management console.";
@@ -190,7 +191,7 @@ async function removeRecord(id){
   return result;
 }
 function clearAdminForm(){
-  if(!isAdminPage || !els.adminForm) return;
+  if((!isAdminPage && !isAdminDashboard) || !els.adminForm) return;
   els.adminForm.reset();
   if(els.photoUrl) els.photoUrl.value="";
   if(els.photoFile) els.photoFile.value="";
@@ -203,21 +204,17 @@ async function login(event){
   event.preventDefault(); els.loginBtn.disabled=true; els.authNote.textContent="Signing in…";
   try{
     await fetchJson("/api/login",{method:"POST",body:JSON.stringify({password:els.adminPassword.value})});
-    els.adminPassword.value=""; setAuthState(true);
-    const response=await fetchJson("/api/records");
-    records=response.records||[]; renderTable();
-    const initial=records[0];
-    if(initial){ renderRecord(initial); fillAdminForm(initial); }
-    else { clearAdminForm(); renderRecord(null); }
-    els.authNote.textContent="Access granted. The management console is ready.";
+    els.adminPassword.value="";
+    window.location.assign("/admin-dashboard.html");
   }catch(error){els.authNote.textContent=error.message;els.loginBtn.disabled=false;}
 }
 async function logout(){
   try{await fetchJson("/api/logout",{method:"POST",body:"{}"});}catch{}
   setAuthState(false);
+  if(isAdminDashboard) window.location.assign("/admin.html");
 }
 function renderAdminActions(){
-  if(!isAdminPage) return;
+  if(!isAdminPage && !isAdminDashboard) return;
   els.loginForm?.addEventListener("submit",login); els.logoutBtn?.addEventListener("click",logout);
   els.adminForm?.addEventListener("submit",async e=>{
     e.preventDefault(); if(!session.authenticated) return;
@@ -258,6 +255,10 @@ async function loadAdmin(){
   try{
     session=await fetchJson("/api/session");
     setAuthState(Boolean(session.authenticated));
+    if(session.authenticated && isAdminPage && !isAdminDashboard){
+      window.location.replace("/admin-dashboard.html");
+      return;
+    }
     if(session.authenticated){
       const response=await fetchJson("/api/records");
       records=response.records||[]; renderTable();
@@ -266,8 +267,13 @@ async function loadAdmin(){
       else { clearAdminForm(); renderRecord(null); }
     } else {
       clearAdminForm();
+      if(isAdminDashboard){ window.location.replace("/admin.html"); return; }
     }
-  }catch(error){setAuthState(false);if(els.authNote)els.authNote.textContent=error.message;}
+  }catch(error){
+    setAuthState(false);
+    if(isAdminDashboard){ window.location.replace("/admin.html"); return; }
+    if(els.authNote)els.authNote.textContent=error.message;
+  }
 }
 renderAdminActions();
-if(isAdminPage) loadAdmin(); else loadClient();
+if(isAdminPage || isAdminDashboard) loadAdmin(); else loadClient();

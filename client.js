@@ -8,7 +8,7 @@ const els = Object.fromEntries([
   "fullName","idNumber","documentType","country","nationality","sex","dob","placeOfBirth","issueDate","expiry","issuingAuthority","address","verificationNotes","photoUrl","photoFile","photoFormPreview",
   "clearForm","recordsTable","recordCount","tableEmpty","scanInput","clearInput","lookupBtn","cameraBtn","cameraNote",
   "resultBody","emptyState","resultAvatar","resultPhoto","resultName","resultDocument","resultStatus","resultBarcode",
-  "resultId","resultCountry","resultNationality","resultSex","resultDob","resultPlaceOfBirth","resultIssueDate","resultExpiry","resultIssuingAuthority","resultAddress","startCameraBtn","stopCameraBtn","cameraFeed",
+  "resultId","resultCountry","resultNationality","resultSex","resultDob","resultPlaceOfBirth","resultIssueDate","resultExpiry","resultIssuingAuthority","resultAddress","resultOutcome","resultCheckedId","verificationBanner","verificationIcon","verificationTitle","verificationMessage","emptyTitle","emptyMessage","startCameraBtn","stopCameraBtn","cameraFeed",
   "cameraState","cameraPlaceholder"
 ].map(id => [id, document.getElementById(id)]));
 
@@ -66,18 +66,44 @@ function renderRecord(record){
     renderBarcode(els.barcodePreview,record.idNumber); renderQr(record.idNumber);
   }
 }
+function setText(el, value){ if(el) el.textContent = value == null ? "—" : String(value); }
+function setEmptyState(title, message){
+  setText(els.emptyTitle, title);
+  setText(els.emptyMessage, message);
+}
+function getRecordOutcome(record){
+  const expiry = record?.expiry ? new Date(record.expiry) : null;
+  if (expiry && !Number.isNaN(expiry.getTime())) {
+    expiry.setHours(23,59,59,999);
+    if (expiry < new Date()) return { label:"Expired", tone:"expired", title:"Record expired", message:"This record was found, but its stated validity period has ended." };
+  }
+  if (String(record?.status || "").toLowerCase() !== "approved") return { label:"Not approved", tone:"invalid", title:"Record not approved", message:"A matching record was found, but it is not currently approved for verification." };
+  return { label:"Valid", tone:"valid", title:"Record verified", message:"This reference matches an approved record and is currently within its stated validity period." };
+}
 function showResult(record){
   if(!els.resultBody || !els.emptyState) return;
-  if(!record){ els.emptyState.classList.remove("hidden"); els.resultBody.classList.add("hidden"); return; }
+  if(!record){
+    els.emptyState.classList.remove("hidden"); els.resultBody.classList.add("hidden");
+    setEmptyState("No matching record", "No approved record was found for that reference. Check the number and try again.");
+    return;
+  }
   els.emptyState.classList.add("hidden"); els.resultBody.classList.remove("hidden");
-  els.resultAvatar.textContent=initials(record.fullName); els.resultName.textContent=record.fullName;
-  els.resultDocument.textContent=record.documentType; els.resultStatus.textContent=record.status;
-  els.resultId.textContent=record.idNumber; els.resultCountry.textContent=record.country;
-  els.resultNationality.textContent=record.nationality||"—"; els.resultSex.textContent=record.sex||"—";
-  els.resultDob.textContent=formatDate(record.dob); els.resultPlaceOfBirth.textContent=record.placeOfBirth||"—";
-  els.resultIssueDate.textContent=formatDate(record.issueDate); els.resultExpiry.textContent=formatDate(record.expiry);
-  els.resultIssuingAuthority.textContent=record.issuingAuthority||"—";
-  els.resultAddress.textContent=record.address; renderPhoto(els.resultPhoto,els.resultAvatar,record.photoUrl,record.fullName);
+  const outcome=getRecordOutcome(record);
+  setText(els.resultAvatar, initials(record.fullName)); setText(els.resultName, record.fullName);
+  setText(els.resultDocument, record.documentType); setText(els.resultStatus, outcome.label);
+  setText(els.resultId, record.idNumber); setText(els.resultCountry, record.country);
+  setText(els.resultNationality, record.nationality); setText(els.resultSex, record.sex);
+  setText(els.resultDob, formatDate(record.dob)); setText(els.resultPlaceOfBirth, record.placeOfBirth);
+  setText(els.resultIssueDate, formatDate(record.issueDate)); setText(els.resultExpiry, formatDate(record.expiry));
+  setText(els.resultIssuingAuthority, record.issuingAuthority);
+  setText(els.resultAddress, record.address); renderPhoto(els.resultPhoto,els.resultAvatar,record.photoUrl,record.fullName);
+  setText(els.resultOutcome, outcome.label); setText(els.resultCheckedId, record.idNumber);
+  setText(els.verificationTitle, outcome.title); setText(els.verificationMessage, outcome.message);
+  els.verificationBanner?.classList.remove("is-valid","is-expired","is-invalid");
+  els.verificationBanner?.classList.add(`is-${outcome.tone}`);
+  if(els.verificationIcon) els.verificationIcon.textContent = outcome.tone === "valid" ? "✓" : "!";
+  els.resultStatus?.classList.remove("badge-valid","badge-expired","badge-invalid");
+  els.resultStatus?.classList.add(`badge-${outcome.tone}`);
   renderBarcode(els.resultBarcode,record.idNumber);
 }
 async function fetchJson(path, options={}){
@@ -94,17 +120,18 @@ async function fetchRecord(query){
 async function lookup(){
   if(!els.scanInput) return;
   const code=normalizeId(els.scanInput.value);
-  if(!code){ els.cameraNote.textContent="Enter a reference number first."; els.scanInput.focus(); return; }
-  els.lookupBtn.disabled=true; els.cameraNote.textContent="Checking record…";
+  if(!code){ setText(els.cameraNote,"Enter a reference number first."); els.scanInput.focus(); return; }
+  if(els.lookupBtn) els.lookupBtn.disabled=true; setText(els.cameraNote,"Checking record…");
   try{
     const record=await fetchRecord(code);
     showResult(record);
-    els.cameraNote.textContent=record ? "Record verified successfully." : "No approved record was found for that reference.";
-  }catch(error){ showResult(null); els.cameraNote.textContent=error.message; }
-  finally{ els.lookupBtn.disabled=false; }
+    setText(els.cameraNote, record ? "Record verified successfully." : "No approved record was found for that reference.");
+  }catch(error){ showResult(null); setText(els.cameraNote,error.message); }
+  finally{ if(els.lookupBtn) els.lookupBtn.disabled=false; }
 }
 async function loadClient(){
   showResult(null);
+  setEmptyState("Ready to verify", "Enter a reference number above to retrieve an approved record.");
   const id=new URLSearchParams(location.search).get("id");
   if(els.scanInput && id){ els.scanInput.value=normalizeId(id); updateClear(); await lookup(); }
   initClientLookup();
@@ -115,7 +142,7 @@ function initClientLookup(){
   els.lookupBtn?.addEventListener("click",lookup);
   els.scanInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();lookup();}});
   els.scanInput.addEventListener("input",updateClear);
-  els.clearInput?.addEventListener("click",()=>{els.scanInput.value="";updateClear();els.scanInput.focus();showResult(null);els.cameraNote.textContent="Enter a reference to begin.";});
+  els.clearInput?.addEventListener("click",()=>{els.scanInput.value="";updateClear();els.scanInput.focus();showResult(null);setText(els.cameraNote,"Enter a reference to begin.");});
   els.cameraBtn?.addEventListener("click",()=>{document.querySelector(".scanner-panel")?.scrollIntoView({behavior:"smooth",block:"center"});startCamera();});
   els.startCameraBtn?.addEventListener("click",startCamera); els.stopCameraBtn?.addEventListener("click",stopCamera);
 }

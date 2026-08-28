@@ -68,8 +68,8 @@
           <div class="empty-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 19 6v5.3c0 4.6-2.9 8.1-7 9.7-4.1-1.6-7-5.1-7-9.7V6l7-3Z" stroke="currentColor" stroke-width="1.6"/><path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           </div>
-          <strong>No record checked yet</strong>
-          <span>Enter the reference above to display the approved record.</span>
+          <strong id="emptyTitle">Ready to verify</strong>
+          <span id="emptyMessage">Enter a reference number above to retrieve an approved record.</span>
         </div>
 
         <div class="result-body hidden" id="resultBody">
@@ -82,12 +82,17 @@
             <span class="badge" id="resultStatus">Approved</span>
           </div>
 
-          <div class="verification-banner">
-            <span class="check-circle">✓</span>
-            <div><strong>Record verified</strong><span>This reference matches an approved record.</span></div>
+          <div class="verification-banner" id="verificationBanner">
+            <span class="check-circle" id="verificationIcon">✓</span>
+            <div><strong id="verificationTitle">Record verified</strong><span id="verificationMessage">This reference matches an approved record.</span></div>
           </div>
 
           <div class="barcode" id="resultBarcode"></div>
+
+          <div class="result-meta">
+            <span><strong>Verification outcome</strong><small id="resultOutcome">Valid</small></span>
+            <span><strong>Reference checked</strong><small id="resultCheckedId">—</small></span>
+          </div>
 
           <div class="detail-grid">
             <div><span>Document number</span><strong id="resultId">—</strong></div>
@@ -124,6 +129,6 @@
     <span>VerifyID · Secure record verification</span>
     <span>For authorised verification use only</span>
   </footer>
-  <script src="/client.js"></script>
+  <script src="/client.js?v=20260828-verifyfix" defer></script>
 </body>
 </html>

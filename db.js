@@ -63,6 +63,8 @@ async function initDb(seedRecord) {
 
   // Records are intentionally not seeded. The public site should only show
   // records that an authorised staff member has actually created.
+  return true;
+}
 
 
 async function listRecords() {

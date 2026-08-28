@@ -459,6 +459,11 @@ async function handleRequest(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname;
 
+  if (req.method === "GET" && pathname === "/healthz") {
+    sendJson(res, 200, { ok: true, service: "pass-id-checker" });
+    return;
+  }
+
   if (req.method === "GET" && pathname === "/") {
     sendFile(res, path.join(__dirname, "index.html"));
     return;
@@ -527,7 +532,7 @@ async function handleRequest(req, res) {
   if (req.method === "POST" && pathname === "/api/logout") {
     sessionToken = null;
     sendJson(res, 200, { authenticated: false }, {
-      "Set-Cookie": `${SESSION_COOKIE}=; Path=/; HttpOnly; Max-Age=0`
+      "Set-Cookie": `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV === "production" ? "; Secure" : ""}`
     });
     return;
   }

@@ -17,12 +17,14 @@ A small Node.js/PostgreSQL application for creating approved identity records an
 ## Deploy to Render
 
 1. Push the repository to GitHub.
-2. Create a Render Blueprint from the repository.
-3. Render uses `render.yaml` to create the Node web service and PostgreSQL database.
-4. Set a strong `ADMIN_PASSWORD` secret in Render.
-5. Deploy.
+2. Create a Render Blueprint from the repository (or create a Node Web Service manually).
+3. In Render → Environment, set:
+   - `ADMIN_PASSWORD` — a strong password for the staff portal.
+   - `DATABASE_URL` — your PostgreSQL/Neon connection string.
+4. Deploy with the build command `npm ci` and start command `npm start`.
+5. Render will use `/healthz` as the health check.
 
-`DATABASE_URL` is supplied by the Render database.
+The app intentionally does not create a Render Postgres database automatically. This avoids replacing an existing Neon/Postgres database and avoids the 30-day expiry of Render's free Postgres tier.
 
 ## Local run
 

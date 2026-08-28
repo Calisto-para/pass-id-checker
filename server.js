@@ -5,7 +5,10 @@ const crypto = require("crypto");
 const { initDb, listRecords, findRecordById, upsertRecord } = require("./db");
 
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === "production" ? "" : "admin123");
+if (process.env.NODE_ENV === "production" && !ADMIN_PASSWORD) {
+  throw new Error("ADMIN_PASSWORD must be configured in production");
+}
 const SESSION_COOKIE = "idv_session";
 
 const mimeTypes = {
@@ -306,6 +309,25 @@ function createQrMatrix(text) {
   return matrix;
 }
 
+function qrSvg(text) {
+  const matrix = createQrMatrix(text);
+  const quiet = 4;
+  const size = matrix.length + quiet * 2;
+  let modules = "";
+  for (let y = 0; y < matrix.length; y++) {
+    for (let x = 0; x < matrix.length; x++) {
+      if (matrix[y][x]) {
+        modules += `<rect x="${x + quiet}" y="${y + quiet}" width="1" height="1"/>`;
+      }
+    }
+  }
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="QR code">
+  <rect width="100%" height="100%" fill="#fff"/>
+  <g fill="#000">${modules}</g>
+</svg>`;
+}
+
 const code39Patterns = {
   "0": "nnnwwnwnn",
   "1": "wnnwnnnnw",
@@ -473,7 +495,12 @@ async function handleRequest(req, res) {
   }
 
   if (req.method === "GET" && pathname.startsWith("/images/")) {
-    const imagePath = path.join(__dirname, pathname);
+    const imageRoot = path.join(__dirname, "images");
+    const imagePath = path.resolve(__dirname, "." + pathname);
+    if (!imagePath.startsWith(imageRoot + path.sep)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
     sendFile(res, imagePath);
     return;
   }
@@ -492,7 +519,7 @@ async function handleRequest(req, res) {
 
     sessionToken = crypto.randomBytes(24).toString("hex");
     sendJson(res, 200, { authenticated: true }, {
-      "Set-Cookie": `${SESSION_COOKIE}=${encodeURIComponent(sessionToken)}; Path=/; HttpOnly`
+      "Set-Cookie": `${SESSION_COOKIE}=${encodeURIComponent(sessionToken)}; Path=/; HttpOnly; SameSite=Lax${process.env.NODE_ENV === "production" ? "; Secure" : ""}`
     });
     return;
   }
@@ -506,6 +533,10 @@ async function handleRequest(req, res) {
   }
 
   if (req.method === "GET" && pathname === "/api/records") {
+    if (!isAuthenticated(req)) {
+      sendJson(res, 401, { error: "Admin login required" });
+      return;
+    }
     sendJson(res, 200, { records: await listRecords() });
     return;
   }
@@ -540,6 +571,21 @@ async function handleRequest(req, res) {
     return;
   }
 
+  if (req.method === "GET" && pathname.startsWith("/api/qr/") && pathname.endsWith(".svg")) {
+    const id = decodeURIComponent(pathname.replace("/api/qr/", "").replace(".svg", ""));
+    try {
+      const svg = qrSvg(id);
+      res.writeHead(200, {
+        "Content-Type": "image/svg+xml; charset=utf-8",
+        "Cache-Control": "public, max-age=300"
+      });
+      res.end(svg);
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
+    return;
+  }
+
   if (req.method === "GET" && pathname.startsWith("/api/barcode/") && pathname.endsWith(".svg")) {
     const id = decodeURIComponent(pathname.replace("/api/barcode/", "").replace(".svg", ""));
     try {
@@ -558,6 +604,10 @@ async function handleRequest(req, res) {
 initDb(seedRecord)
   .then(() => {
     const server = http.createServer((req, res) => {
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("X-Frame-Options", "SAMEORIGIN");
+      res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+      res.setHeader("Permissions-Policy", "camera=(self)");
       handleRequest(req, res).catch(error => {
         sendJson(res, 500, { error: error.message || "Internal server error" });
       });

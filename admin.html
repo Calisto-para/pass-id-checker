@@ -1,156 +1,75 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ID Verification | Admin Console</title>
+  <meta name="theme-color" content="#0b1728" />
+  <title>VerifyID | Staff Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body class="admin-page">
-  <header class="topbar admin-topbar">
-    <div>
-      <p class="eyebrow">Admin dashboard</p>
-      <h1>Issue and manage approved records</h1>
-    </div>
-    <a class="topbar-link" href="/">Client view</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="VerifyID home">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 19 6v5.3c0 4.6-2.9 8.1-7 9.7-4.1-1.6-7-5.1-7-9.7V6l7-3Z" stroke="currentColor" stroke-width="1.8"/><path d="m8.5 12 2.2 2.2 4.8-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span><strong>VerifyID</strong><small>Staff portal</small></span>
+    </a>
+    <a class="header-link" href="/">← Back to verification</a>
   </header>
 
-  <main class="page-grid admin-grid">
-    <section class="hero-panel admin-hero">
-      <div>
-        <p class="section-tag">Admin login</p>
-        <h2>Secure staff access</h2>
-        <p class="lead">Log in to create or update approved records. Each saved entry generates a QR code and a public lookup link.</p>
+  <main class="admin-main">
+    <section class="admin-login hero-card">
+      <div class="admin-intro">
+        <span class="eyebrow">Staff access</span>
+        <h1>Manage approved records.</h1>
+        <p>Create, update and issue verification records from one secure workspace.</p>
       </div>
-
       <form class="login-card" id="loginForm">
-        <label>
-          Admin password
-          <input type="password" id="adminPassword" placeholder="Enter admin password" />
-        </label>
-        <div class="button-row">
-          <button class="btn btn-primary" id="loginBtn" type="submit">Log in</button>
-          <button class="btn btn-secondary" id="logoutBtn" type="button">Log out</button>
-        </div>
-        <p class="status-text" id="authNote">Log in with the admin password to access approved records.</p>
-        <p class="status-text">The password comes from `ADMIN_PASSWORD` on Render.</p>
+        <div class="card-title"><div class="title-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7"/></svg></div><div><strong>Sign in</strong><span>Authorised staff only</span></div></div>
+        <label for="adminPassword">Admin password</label>
+        <input type="password" id="adminPassword" autocomplete="current-password" placeholder="Enter your password" />
+        <div class="button-row"><button class="btn btn-primary" id="loginBtn" type="submit">Sign in</button><button class="btn btn-secondary" id="logoutBtn" type="button">Sign out</button></div>
+        <p class="form-status" id="authNote">Sign in to access the staff workspace.</p>
       </form>
     </section>
 
-    <section class="panel admin-form-panel admin-only hidden">
-      <div class="panel-head">
-        <p class="section-tag">Person details</p>
-        <h2>Create an approved record</h2>
-      </div>
+    <div class="admin-workspace admin-only hidden">
+      <section class="panel admin-form-panel">
+        <div class="panel-head"><div><span class="section-label">Record details</span><h2>Create or update a record</h2></div><span class="secure-label">Staff only</span></div>
+        <form class="form-grid admin-form" id="adminForm">
+          <label>Full name<input type="text" id="fullName" placeholder="John Doe" required /></label>
+          <label>Reference number<input type="text" id="idNumber" placeholder="ID-1002" required /></label>
+          <label>Document type<input type="text" id="documentType" placeholder="Passport" required /></label>
+          <label>Country<input type="text" id="country" placeholder="Nigeria" required /></label>
+          <label>Date of birth<input type="date" id="dob" required /></label>
+          <label>Expiry date<input type="date" id="expiry" required /></label>
+          <label class="full">Address<textarea id="address" rows="3" placeholder="Street, city, region" required></textarea></label>
+          <label class="full">Photo URL<input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg" /></label>
+          <label class="full file-label">Upload photo<input type="file" id="photoFile" accept="image/*" /><span class="file-help">Use a clear, front-facing image. A URL or uploaded image can be used.</span></label>
+          <div class="photo-dropzone full"><div><strong>Photo preview</strong><span>Preview before saving.</span></div><img id="photoFormPreview" class="photo-form-preview hidden" alt="Selected photo preview" /></div>
+          <div class="button-row full"><button class="btn btn-primary" type="submit">Save approved record</button><button class="btn btn-secondary" type="button" id="seedDemo">Load demo</button></div>
+        </form>
+      </section>
 
-      <form class="form-grid admin-form" id="adminForm">
-        <label>
-          Full name
-          <input type="text" id="fullName" placeholder="John Doe" required />
-        </label>
-        <label>
-          ID number
-          <input type="text" id="idNumber" placeholder="ID-1002" required />
-        </label>
-        <label>
-          Passport or national ID
-          <input type="text" id="documentType" placeholder="Passport" required />
-        </label>
-        <label>
-          Country
-          <input type="text" id="country" placeholder="Ukraine" required />
-        </label>
-        <label>
-          Date of birth
-          <input type="date" id="dob" required />
-        </label>
-        <label>
-          Expiry date
-          <input type="date" id="expiry" required />
-        </label>
-        <label class="full">
-          Address
-          <textarea id="address" rows="3" placeholder="Street, city, region" required></textarea>
-        </label>
-        <label class="full">
-          Photo URL
-          <input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg" />
-        </label>
-        <label class="full">
-          Upload photo
-          <input type="file" id="photoFile" accept="image/*" />
-        </label>
-        <div class="photo-dropzone full">
-          <div>
-            <span class="share-label">Photo preview</span>
-            <p class="share-note">Choose an image file or paste a photo URL. The photo is saved with the record.</p>
-          </div>
-          <img id="photoFormPreview" class="photo-form-preview" alt="Selected photo preview" />
+      <section class="panel admin-preview-panel">
+        <div class="panel-head"><div><span class="section-label">Issued verification</span><h2>Client verification card</h2></div><span class="secure-label">Preview</span></div>
+        <div class="issued-card">
+          <div class="issued-top"><div class="identity-person"><img class="profile-photo hidden" id="previewPhoto" alt="Person" /><div class="avatar" id="previewAvatar">ID</div><div><h3 id="previewName">—</h3><p id="previewRole">—</p></div></div><span class="badge" id="previewStatus">Approved</span></div>
+          <div class="barcode" id="barcodePreview"></div>
+          <div class="detail-grid compact"><div><span>Reference</span><strong id="previewId">—</strong></div><div><span>Country</span><strong id="previewCountry">—</strong></div><div><span>Expiry</span><strong id="previewExpiry">—</strong></div></div>
+          <div class="share-block"><div><strong>Public verification QR</strong><span>Share this code or link with the client.</span></div><img id="shareQr" class="share-qr" alt="Public verification QR code" /><a id="shareLink" class="share-link" href="/">—</a></div>
         </div>
-        <div class="button-row full">
-          <button class="btn btn-primary" type="submit">Save record</button>
-          <button class="btn btn-secondary" type="button" id="seedDemo">Load demo record</button>
-        </div>
-      </form>
-    </section>
+      </section>
 
-    <section class="panel admin-preview-panel admin-only hidden">
-      <div class="panel-head">
-        <p class="section-tag">Issued code</p>
-        <h2>Client barcode card</h2>
-      </div>
-
-      <div class="issued-card">
-        <div class="result-card-head">
-          <img class="profile-photo" id="previewPhoto" alt="Person photo" />
-          <div class="avatar" id="previewAvatar">A</div>
-          <div>
-            <h3 id="previewName">Olena Shevchenko</h3>
-            <p id="previewRole">Passport</p>
-          </div>
-          <span class="badge" id="previewStatus">Approved</span>
-        </div>
-        <div class="barcode" id="barcodePreview"></div>
-        <div class="detail-grid compact">
-          <div><span>ID Number</span><strong id="previewId">ID-0001</strong></div>
-          <div><span>Country</span><strong id="previewCountry">Ukraine</strong></div>
-          <div><span>Expiry</span><strong id="previewExpiry">2028-08-12</strong></div>
-        </div>
-        <div class="share-block">
-          <div class="share-block-head">
-            <span class="share-label">Client barcode</span>
-            <span class="share-note">This is what the client scans</span>
-          </div>
-          <img id="shareQr" class="share-qr" alt="Client barcode" />
-          <a id="shareLink" class="share-link" href="?id=ID-0001">https://example.com/?id=ID-0001</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel table-panel admin-only hidden">
-      <div class="panel-head">
-        <p class="section-tag">Stored records</p>
-        <h2>Saved records</h2>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>ID</th>
-              <th>Country</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="recordsTable"></tbody>
-        </table>
-      </div>
-    </section>
+      <section class="panel table-panel">
+        <div class="panel-head"><div><span class="section-label">Records</span><h2>Saved approved records</h2></div><span class="record-count" id="recordCount">0 records</span></div>
+        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Reference</th><th>Country</th><th>Status</th></tr></thead><tbody id="recordsTable"></tbody></table><div class="table-empty hidden" id="tableEmpty">No records have been saved yet.</div></div>
+      </section>
+    </div>
   </main>
-
+  <footer class="site-footer"><span>VerifyID Staff Portal</span><span>Keep account credentials private</span></footer>
   <script src="/client.js"></script>
 </body>
 </html>

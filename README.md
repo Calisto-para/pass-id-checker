@@ -1,22 +1,36 @@
-# pass-id-checker
+# VerifyID — secure record verification
 
-ID verification app with admin record entry, QR generation, and client lookup.
+A small Node.js/PostgreSQL application for creating approved identity records and letting clients verify a record by reference number, barcode, or QR code.
+
+## What was improved
+
+- Reworked the public page into a clean, responsive production-style interface.
+- Added a dedicated staff portal with a clearer record-management workflow.
+- Public visitors can only retrieve a specific record when they know its reference; the full records list is now staff-only.
+- Public verification links such as `/?id=ID-1002` automatically open and verify the referenced record.
+- Added a real QR-code endpoint for shareable verification links; barcode and QR labels are no longer mixed up.
+- Improved mobile layouts, form states, empty states, camera controls, status messaging and accessibility.
+- Added safer production session-cookie settings and basic security response headers.
+- Removed automatic database seeding so a fresh production database does not expose a fake demo identity.
+- Uploaded photos are limited to 2 MB in the staff UI.
 
 ## Deploy to Render
 
-1. Push this repo to GitHub.
-2. In Render, create a new Blueprint and select this repository.
-3. Render will use `render.yaml` to create:
-   - a Node web service
-   - a Postgres database
-4. Set `ADMIN_PASSWORD` when Render prompts for the secret value.
-5. Deploy the blueprint.
+1. Push the repository to GitHub.
+2. Create a Render Blueprint from the repository.
+3. Render uses `render.yaml` to create the Node web service and PostgreSQL database.
+4. Set a strong `ADMIN_PASSWORD` secret in Render.
+5. Deploy.
 
-Render injects `DATABASE_URL` from the provisioned database automatically.
+`DATABASE_URL` is supplied by the Render database.
 
 ## Local run
 
-1. Set `DATABASE_URL` to your Postgres connection string.
-2. Optionally set `ADMIN_PASSWORD`.
-3. Run `npm start`.
-# pass-id-checker
+Set `DATABASE_URL` to your PostgreSQL connection string and optionally `ADMIN_PASSWORD`, then run:
+
+```bash
+npm install
+npm start
+```
+
+The local default admin password remains `admin123` only when `NODE_ENV` is not `production`. Always set `ADMIN_PASSWORD` in production.

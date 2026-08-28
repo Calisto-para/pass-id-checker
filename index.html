@@ -1,91 +1,125 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ID Verification | Verified Client Access</title>
+  <meta name="theme-color" content="#0b1728" />
+  <meta name="description" content="Secure document verification and approved record lookup." />
+  <title>VerifyID | Secure Record Verification</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body class="client-page">
-  <header class="topbar">
-    <div>
-      <p class="eyebrow">Client verification</p>
-      <h1>Scan an ID to view approved records</h1>
-    </div>
-    <a class="topbar-link" href="/admin.html">Admin access</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="VerifyID home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 19 6v5.3c0 4.6-2.9 8.1-7 9.7-4.1-1.6-7-5.1-7-9.7V6l7-3Z" stroke="currentColor" stroke-width="1.8"/><path d="m8.5 12 2.2 2.2 4.8-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span><strong>VerifyID</strong><small>Record verification</small></span>
+    </a>
+    <a class="header-link" href="/admin.html">Staff portal <span aria-hidden="true">→</span></a>
   </header>
 
-  <main class="page-grid client-grid">
-    <section class="hero-panel client-hero">
-      <div>
-        <p class="section-tag">Client page</p>
-        <h2>Barcode and QR scan</h2>
-        <p class="lead">
-          Enter a code manually or scan a QR or barcode to securely retrieve the approved record.
-        </p>
-      </div>
-
-      <div class="scan-panel">
-        <label>
-          Scan code
-          <input id="scanInput" type="text" placeholder="ID-0001" />
-        </label>
-        <div class="button-row">
-          <button class="btn btn-primary" id="lookupBtn" type="button">Look up</button>
-          <button class="btn btn-secondary" id="cameraBtn" type="button">Use camera</button>
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="live-dot"></span> Secure verification</span>
+        <h1>Verify an approved identity record.</h1>
+        <p>Enter the reference number or scan the barcode on a verification card. Results are retrieved directly from the approved records database.</p>
+        <div class="trust-row">
+          <span>✓ Approved records only</span>
+          <span>✓ Fast lookup</span>
+          <span>✓ Mobile friendly</span>
         </div>
-        <p class="status-text" id="cameraNote">Client lookup is ready for approved scans.</p>
-      </div>
-    </section>
-
-    <section class="panel result-panel">
-      <div class="panel-head">
-        <p class="section-tag">Client result</p>
-        <h2>Approved record details</h2>
       </div>
 
-      <div class="result-empty" id="emptyState">Scan a code to display the approved record details here.</div>
-
-      <div class="result-body hidden" id="resultBody">
-        <div class="result-card-head">
-          <img class="profile-photo" id="resultPhoto" alt="Person photo" />
-          <div class="avatar" id="resultAvatar">A</div>
-          <div>
-            <h3 id="resultName">Olena Shevchenko</h3>
-            <p id="resultDocument">Passport</p>
+      <div class="lookup-card">
+        <div class="card-title">
+          <div class="title-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 7V5a1 1 0 0 1 1-1h2M20 7V5a1 1 0 0 0-1-1h-2M4 17v2a1 1 0 0 0 1 1h2M20 17v2a1 1 0 0 1-1 1h-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 12h10M9 9v6M15 9v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </div>
-          <span class="badge" id="resultStatus">Approved</span>
+          <div><strong>Check a record</strong><span>Use your ID reference</span></div>
         </div>
-
-        <div class="barcode" id="resultBarcode"></div>
-
-        <div class="detail-grid">
-          <div><span>ID Number</span><strong id="resultId">ID-0001</strong></div>
-          <div><span>Country</span><strong id="resultCountry">Ukraine</strong></div>
-          <div><span>Date of birth</span><strong id="resultDob">14/01/1998</strong></div>
-          <div><span>Expiry</span><strong id="resultExpiry">2028-08-12</strong></div>
-          <div class="wide"><span>Address</span><strong id="resultAddress">Kyiv, Ukraine</strong></div>
+        <label for="scanInput">Reference / barcode value</label>
+        <div class="input-wrap">
+          <input id="scanInput" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. ID-0001" />
+          <button class="clear-btn hidden" id="clearInput" type="button" aria-label="Clear reference">×</button>
         </div>
+        <div class="button-row">
+          <button class="btn btn-primary" id="lookupBtn" type="button">Verify record</button>
+          <button class="btn btn-secondary" id="cameraBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l1-1.5h6.6l1 1.5h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12.5" r="3.2" stroke="currentColor" stroke-width="1.7"/></svg>
+            Scan with camera
+          </button>
+        </div>
+        <p class="form-status" id="cameraNote" role="status">Enter a reference to begin.</p>
       </div>
     </section>
 
-    <section class="panel camera-panel">
-      <div class="panel-head">
-        <p class="section-tag">Camera</p>
-        <h2>Live barcode scanner</h2>
+    <section class="content-grid">
+      <div class="panel result-panel">
+        <div class="panel-head">
+          <div><span class="section-label">Verification result</span><h2>Record details</h2></div>
+          <span class="secure-label">Secure lookup</span>
+        </div>
+
+        <div class="result-empty" id="emptyState">
+          <div class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 19 6v5.3c0 4.6-2.9 8.1-7 9.7-4.1-1.6-7-5.1-7-9.7V6l7-3Z" stroke="currentColor" stroke-width="1.6"/><path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <strong>No record checked yet</strong>
+          <span>Enter the reference above to display the approved record.</span>
+        </div>
+
+        <div class="result-body hidden" id="resultBody">
+          <div class="identity-head">
+            <div class="identity-person">
+              <img class="profile-photo hidden" id="resultPhoto" alt="Verified person" />
+              <div class="avatar" id="resultAvatar">ID</div>
+              <div><h3 id="resultName">—</h3><p id="resultDocument">—</p></div>
+            </div>
+            <span class="badge" id="resultStatus">Approved</span>
+          </div>
+
+          <div class="verification-banner">
+            <span class="check-circle">✓</span>
+            <div><strong>Record verified</strong><span>This reference matches an approved record.</span></div>
+          </div>
+
+          <div class="barcode" id="resultBarcode"></div>
+
+          <div class="detail-grid">
+            <div><span>Reference number</span><strong id="resultId">—</strong></div>
+            <div><span>Country</span><strong id="resultCountry">—</strong></div>
+            <div><span>Date of birth</span><strong id="resultDob">—</strong></div>
+            <div><span>Expiry date</span><strong id="resultExpiry">—</strong></div>
+            <div class="wide"><span>Address</span><strong id="resultAddress">—</strong></div>
+          </div>
+        </div>
       </div>
-      <video id="cameraFeed" playsinline muted></video>
-      <div class="button-row">
-        <button class="btn btn-primary" id="startCameraBtn" type="button">Start camera</button>
-        <button class="btn btn-secondary" id="stopCameraBtn" type="button">Stop camera</button>
-      </div>
-      <p class="status-text" id="cameraState">Camera off</p>
+
+      <aside class="panel scanner-panel">
+        <div class="panel-head"><div><span class="section-label">Camera</span><h2>Barcode scanner</h2></div><span class="camera-state" id="cameraState">Off</span></div>
+        <div class="camera-frame">
+          <video id="cameraFeed" playsinline muted></video>
+          <div class="scan-guide" aria-hidden="true"><span></span></div>
+          <div class="camera-placeholder" id="cameraPlaceholder">Camera preview will appear here</div>
+        </div>
+        <div class="button-row">
+          <button class="btn btn-primary" id="startCameraBtn" type="button">Start scanner</button>
+          <button class="btn btn-secondary" id="stopCameraBtn" type="button">Stop</button>
+        </div>
+        <p class="form-status">Allow camera access when your browser asks. You can always use manual lookup instead.</p>
+      </aside>
     </section>
   </main>
 
+  <footer class="site-footer">
+    <span>VerifyID · Secure record verification</span>
+    <span>For authorised verification use only</span>
+  </footer>
   <script src="/client.js"></script>
 </body>
 </html>

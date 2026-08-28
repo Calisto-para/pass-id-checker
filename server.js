@@ -429,6 +429,45 @@ function code39Svg(text) {
 </svg>`;
 }
 
+const CODE128_B = [
+  "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
+  "221312","231212","112232","122132","122231","113222","123122","123221","223211","221132",
+  "221231","213212","223112","312131","311222","321122","321221","312212","322112","322211",
+  "212123","212321","232121","111323","131123","131321","112313","132113","132311","211313",
+  "231113","231311","112133","112331","132131","113123","113321","133121","313121","211331",
+  "231131","213113","213311","213131","311123","311321","331121","312113","312311","332111",
+  "314111","221411","431111","111224","111422","121124","121421","141122","141221","112214",
+  "112412","122114","122411","142112","142211","241211","221114","413111","241112","134111",
+  "111242","121142","121241","114212","124112","124211","411212","421112","421211","212141",
+  "214121","412121","111143","111341","131141","114113","114311","411113","411311","113141",
+  "114131","311141","411131","211412","211214","211232","2331112"
+];
+function code128Svg(text) {
+  const content=String(text||"").trim();
+  if(!content) throw new Error("Barcode content is empty");
+  // Code 128-B supports the printable ASCII range used by a normal HTTPS URL.
+  for(const ch of content){ const n=ch.charCodeAt(0); if(n<32 || n>126) throw new Error("Barcode content contains unsupported characters"); }
+  const values=[104];
+  for(const ch of content) values.push(ch.charCodeAt(0)-32);
+  let checksum=104;
+  for(let i=1;i<values.length;i++) checksum += values[i]*i;
+  checksum%=103; values.push(checksum,106);
+  const quiet=12, scale=2, height=72;
+  let x=quiet, shapes="";
+  for(const value of values){
+    const pattern=CODE128_B[value];
+    let cursor=x;
+    for(let i=0;i<pattern.length;i++){
+      const width=Number(pattern[i])*scale;
+      if(i%2===0) shapes += `<rect x="${cursor}" y="0" width="${width}" height="${height}"/>`;
+      cursor+=width;
+    }
+    x=cursor;
+  }
+  const totalWidth=x+quiet;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${height}" shape-rendering="crispEdges" role="img" aria-label="Verification barcode">\n  <rect width="100%" height="100%" fill="#ffffff"/>\n  <g fill="#000000">${shapes}</g>\n</svg>`;
+}
+
 function createRecord(input) {
   return {
     fullName: String(input.fullName || "").trim(),
@@ -622,7 +661,11 @@ async function handleRequest(req, res) {
   if (req.method === "GET" && pathname.startsWith("/api/qr/") && pathname.endsWith(".svg")) {
     const id = decodeURIComponent(pathname.replace("/api/qr/", "").replace(".svg", ""));
     try {
-      const svg = qrSvg(id);
+      const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim();
+      const protocol = forwardedProto || (req.socket.encrypted ? "https" : "http");
+      const host = req.headers.host;
+      const verificationUrl = `${protocol}://${host}/?id=${encodeURIComponent(id)}`;
+      const svg = qrSvg(verificationUrl);
       res.writeHead(200, {
         "Content-Type": "image/svg+xml; charset=utf-8",
         "Cache-Control": "public, max-age=300"
@@ -637,8 +680,12 @@ async function handleRequest(req, res) {
   if (req.method === "GET" && pathname.startsWith("/api/barcode/") && pathname.endsWith(".svg")) {
     const id = decodeURIComponent(pathname.replace("/api/barcode/", "").replace(".svg", ""));
     try {
-      const svg = code39Svg(id);
-      res.writeHead(200, { "Content-Type": "image/svg+xml; charset=utf-8" });
+      const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim();
+      const protocol = forwardedProto || (req.socket.encrypted ? "https" : "http");
+      const host = req.headers.host;
+      const verificationUrl = `${protocol}://${host}/?id=${encodeURIComponent(id)}`;
+      const svg = code128Svg(verificationUrl);
+      res.writeHead(200, { "Content-Type": "image/svg+xml; charset=utf-8", "Cache-Control": "public, max-age=300" });
       res.end(svg);
     } catch (error) {
       sendJson(res, 400, { error: error.message });

@@ -361,3 +361,13 @@ html, body { max-width: 100%; overflow-x: hidden; }
   .client-page .identity-person { grid-template-columns: 46px minmax(0, 1fr); }
   .client-page .identity-person .profile-photo, .client-page .identity-person .avatar { width: 46px; height: 46px; min-width: 46px; }
 }
+
+/* Client result actions: keep the download control readable on narrow screens. */
+.result-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;min-width:0}
+.btn-download{white-space:nowrap}
+@media(max-width:620px){
+  .client-page .panel-head{flex-direction:column;align-items:stretch}
+  .client-page .result-actions{width:100%;justify-content:stretch}
+  .client-page .result-actions .btn-download{flex:1 1 100%;width:100%;min-width:0;padding-left:12px;padding-right:12px}
+  .client-page .result-actions .secure-label{align-self:flex-start}
+}

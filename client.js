@@ -197,9 +197,17 @@ async function scanLoop(){
     const results=await detector.detect(els.cameraFeed);
     const code=results[0]?.rawValue||"";
     if(code){
+      try {
+        const scannedUrl = new URL(code, window.location.origin);
+        if (scannedUrl.origin === window.location.origin && scannedUrl.searchParams.get("id")) {
+          stopCamera();
+          window.location.href = scannedUrl.href;
+          return;
+        }
+      } catch {}
       els.scanInput.value=code; updateClear();
       const record=await fetchRecord(code); showResult(record);
-      els.cameraNote.textContent=record ? "Barcode detected and record verified." : "Barcode detected, but no approved record exists.";
+      els.cameraNote.textContent=record ? "Code detected and record verified." : "Code detected, but no approved record exists.";
       if(record) stopCamera();
     }
   }catch{}

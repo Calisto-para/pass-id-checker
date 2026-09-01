@@ -509,8 +509,19 @@ async function handleRequest(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname;
 
-  if (req.method === "GET" && (pathname === "/healthz" || pathname === "/api/healthz")) {
-    sendJson(res, 200, { ok: true, service: "pass-id-checker" });
+  // Public health endpoint for Render and external uptime monitors such as UptimeRobot.
+  // It intentionally does not touch the database or require authentication.
+  if ((req.method === "GET" || req.method === "HEAD") && (pathname === "/healthz" || pathname === "/api/healthz")) {
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    if (req.method === "HEAD") {
+      res.end();
+    } else {
+      res.end("OK");
+    }
     return;
   }
 

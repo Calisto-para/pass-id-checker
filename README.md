@@ -23,6 +23,7 @@ A small Node.js/PostgreSQL application for creating approved identity records an
    - `DATABASE_URL` — your PostgreSQL/Neon connection string.
 4. Deploy with the build command `npm ci` and start command `npm start`.
 5. Render will use `/api/healthz` (with `/healthz` kept as a backwards-compatible alias) as the health check.
+6. For UptimeRobot, create an **HTTP(s)** monitor and use the full public URL to this endpoint, for example `https://YOUR-DOMAIN/healthz`. Use **GET**, and expect HTTP **200**. Do not add `/healthz` to the domain twice. The endpoint is public, requires no login, does not query the database, returns plain-text `OK`, and also supports `HEAD` requests.
 
 The app intentionally does not create a Render Postgres database automatically. This avoids replacing an existing Neon/Postgres database and avoids the 30-day expiry of Render's free Postgres tier.
 

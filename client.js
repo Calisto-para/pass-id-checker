@@ -14,6 +14,9 @@ const els = Object.fromEntries([
 
 let records = [];
 let session = { authenticated: false };
+// Holds the database reference being edited. This lets an edit safely change
+// the reference number without accidentally creating a second record.
+let editingRecordId = null;
 let stream = null, detector = null, cameraLoop = null;
 const origin = window.location.origin;
 
@@ -244,7 +247,14 @@ function setAuthState(authenticated){
   if(els.logoutBtn) els.logoutBtn.disabled=!authenticated;
 }
 async function saveRecord(record){
-  const result=await fetchJson("/api/records",{method:"POST",body:JSON.stringify(record)});
+  const isEditing = Boolean(editingRecordId);
+  const path = isEditing
+    ? `/api/records/${encodeURIComponent(editingRecordId)}`
+    : "/api/records";
+  const result=await fetchJson(path,{
+    method:isEditing ? "PUT" : "POST",
+    body:JSON.stringify(record)
+  });
   records=result.records||records; renderTable(); renderRecord(result.record); return result.record;
 }
 async function removeRecord(id){
@@ -256,6 +266,7 @@ async function removeRecord(id){
 }
 function clearAdminForm(){
   if((!isAdminPage && !isAdminDashboard) || !els.adminForm) return;
+  editingRecordId = null;
   els.adminForm.reset();
   if(els.photoUrl) els.photoUrl.value="";
   if(els.photoFile) els.photoFile.value="";
@@ -285,7 +296,7 @@ function renderAdminActions(){
     const record={fullName:els.fullName.value.trim(),idNumber:normalizeId(els.idNumber.value),documentType:els.documentType.value.trim(),country:els.country.value.trim(),nationality:els.nationality.value.trim(),sex:els.sex.value.trim(),dob:els.dob.value,placeOfBirth:els.placeOfBirth.value.trim(),issueDate:els.issueDate.value,expiry:els.expiry.value,issuingAuthority:els.issuingAuthority.value.trim(),address:els.address.value.trim(),verificationNotes:els.verificationNotes.value.trim(),photoUrl:els.photoUrl.value.trim(),status:"Approved"};
     const requiredFields=["fullName","idNumber","documentType","country","nationality","sex","dob","placeOfBirth","issueDate","expiry","issuingAuthority","address"];
     if(requiredFields.some(field=>!record[field])){els.authNote.textContent="Please complete all required fields before saving.";return;}
-    try{const saved=await saveRecord(record);fillAdminForm(saved);els.authNote.textContent="Record saved successfully.";}catch(error){els.authNote.textContent=error.message;}
+    try{const saved=await saveRecord(record);editingRecordId=saved.idNumber;fillAdminForm(saved);els.authNote.textContent="Record saved successfully.";}catch(error){els.authNote.textContent=error.message;}
   });
   els.photoFile?.addEventListener("change",async e=>{
     const file=e.target.files?.[0]; if(!file) return;
@@ -302,7 +313,7 @@ function renderAdminActions(){
     if(!id) return;
     if(button.dataset.action==="edit"){
       const record=records.find(r=>normalizeId(r.idNumber)===normalizeId(id));
-      if(record){fillAdminForm(record);renderRecord(record);els.authNote.textContent=`Editing ${record.fullName}.`;els.fullName?.focus();}
+      if(record){editingRecordId=record.idNumber;fillAdminForm(record);renderRecord(record);els.authNote.textContent=`Editing ${record.fullName}.`;els.fullName?.focus();}
       return;
     }
     if(button.dataset.action==="delete"){
@@ -327,7 +338,7 @@ async function loadAdmin(){
       const response=await fetchJson("/api/records");
       records=response.records||[]; renderTable();
       const initial=records[0];
-      if(initial){ renderRecord(initial); fillAdminForm(initial); }
+      if(initial){ editingRecordId=initial.idNumber; renderRecord(initial); fillAdminForm(initial); }
       else { clearAdminForm(); renderRecord(null); }
     } else {
       clearAdminForm();

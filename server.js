@@ -2,7 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { initDb, listRecords, findRecordById, upsertRecord, deleteRecord } = require("./db");
+const { initDb, listRecords, findRecordById, upsertRecord, updateRecord, deleteRecord } = require("./db");
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === "production" ? "" : "admin123");
@@ -46,7 +46,7 @@ function parseBody(req) {
     let body = "";
     req.on("data", chunk => {
       body += chunk;
-      if (body.length > 1_000_000) {
+      if (body.length > 4_000_000) {
         req.destroy();
       }
     });
@@ -622,6 +622,45 @@ async function handleRequest(req, res) {
     const saved = await upsertRecord(record);
     const records = await listRecords();
     sendJson(res, 200, { record: saved, records });
+    return;
+  }
+
+  // Update an existing record. Keeping this separate from POST means an edit
+  // can safely change the reference number without leaving the old record behind.
+  if (req.method === "PUT" && pathname.startsWith("/api/records/")) {
+    if (!isAuthenticated(req)) {
+      sendJson(res, 401, { error: "Admin login required" });
+      return;
+    }
+
+    const originalId = decodeURIComponent(pathname.replace("/api/records/", ""));
+    if (!originalId) {
+      sendJson(res, 400, { error: "A record reference is required" });
+      return;
+    }
+
+    const body = await parseBody(req);
+    const record = createRecord(body);
+    if (!validRecord(record)) {
+      sendJson(res, 400, { error: "Missing required fields" });
+      return;
+    }
+
+    try {
+      const saved = await updateRecord(originalId, record);
+      if (!saved) {
+        sendJson(res, 404, { error: "Record not found" });
+        return;
+      }
+      const records = await listRecords();
+      sendJson(res, 200, { record: saved, records });
+    } catch (error) {
+      if (error && error.code === "23505") {
+        sendJson(res, 409, { error: "That document number is already in use." });
+        return;
+      }
+      throw error;
+    }
     return;
   }
 

@@ -178,10 +178,60 @@ async function upsertRecord(record) {
   return mapRecord(rows[0]);
 }
 
+
+async function updateRecord(originalId, record) {
+  const normalized = normalizeRecord(record);
+  const { rows } = await pool.query(
+    `
+      UPDATE records
+      SET full_name = $2,
+          id_number = $3,
+          document_type = $4,
+          country = $5,
+          nationality = $6,
+          sex = $7,
+          dob = $8,
+          place_of_birth = $9,
+          issue_date = $10,
+          expiry = $11,
+          issuing_authority = $12,
+          address = $13,
+          verification_notes = $14,
+          photo_url = $15,
+          status = $16,
+          updated_at = NOW()
+      WHERE UPPER(id_number) = $1
+      RETURNING full_name, id_number, document_type, country, nationality, sex,
+                dob, place_of_birth, issue_date, expiry, issuing_authority, address,
+                verification_notes, photo_url, status
+    `,
+    [
+      normalizeId(originalId),
+      normalized.fullName,
+      normalized.idNumber,
+      normalized.documentType,
+      normalized.country,
+      normalized.nationality,
+      normalized.sex,
+      normalized.dob,
+      normalized.placeOfBirth,
+      normalized.issueDate,
+      normalized.expiry,
+      normalized.issuingAuthority,
+      normalized.address,
+      normalized.verificationNotes,
+      normalized.photoUrl,
+      normalized.status
+    ]
+  );
+  return rows[0] ? mapRecord(rows[0]) : null;
+}
+
 module.exports = {
   initDb,
   listRecords,
   findRecordById,
   upsertRecord,
+  updateRecord,
   deleteRecord
 };

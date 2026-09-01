@@ -45,8 +45,8 @@
           <label>Issuing authority<input type="text" id="issuingAuthority" placeholder="Issuing authority" required /></label>
           <label class="full">Residential address<textarea id="address" rows="3" placeholder="Residential address" required></textarea></label>
           <label class="full">Verification notes<textarea id="verificationNotes" rows="3" placeholder="Optional internal note about the verification review"></textarea></label>
-          <label class="full">Photo URL<input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg" /></label>
-          <label class="full file-label">Upload photo<input type="file" id="photoFile" accept="image/*" /><span class="file-help">Use a clear, front-facing image. A URL or uploaded image can be used.</span></label>
+          <label class="full">Photo URL<input type="text" id="photoUrl" placeholder="https://example.com/photo.jpg" inputmode="url" /></label>
+          <label class="full file-label">Upload photo<input type="file" id="photoFile" accept="image/*" /><span class="file-help">Use a clear, front-facing image. A URL or uploaded image can be used (up to 2 MB).</span></label>
           <div class="photo-dropzone full"><div><strong>Photo preview</strong><span>Preview before saving.</span></div><img id="photoFormPreview" class="photo-form-preview hidden" alt="Selected photo preview" /></div>
           <div class="button-row full"><button class="btn btn-primary" type="submit">Save record</button><button class="btn btn-secondary" type="button" id="clearForm">Clear form</button></div>
         </form>

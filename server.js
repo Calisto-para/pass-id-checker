@@ -35,7 +35,43 @@ const seedRecord = {
   status: "Approved"
 };
 
-let sessionToken = null;
+const SESSION_SECRET = crypto
+  .createHash("sha256")
+  .update(`verifyid-session:${ADMIN_PASSWORD}`)
+  .digest("hex");
+
+function createSessionToken() {
+  const payload = Buffer.from(JSON.stringify({
+    exp: Date.now() + 7 * 24 * 60 * 60 * 1000
+  })).toString("base64url");
+  const signature = crypto
+    .createHmac("sha256", SESSION_SECRET)
+    .update(payload)
+    .digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+function isValidSessionToken(token) {
+  if (!token) return false;
+  const parts = String(token).split(".");
+  if (parts.length !== 2) return false;
+
+  const [payload, signature] = parts;
+  const expected = crypto
+    .createHmac("sha256", SESSION_SECRET)
+    .update(payload)
+    .digest("base64url");
+
+  if (signature.length !== expected.length) return false;
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return false;
+
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return Number(data.exp) > Date.now();
+  } catch {
+    return false;
+  }
+}
 
 function normalizeId(value) {
   return String(value || "").trim().toUpperCase();
@@ -98,7 +134,7 @@ function getCookie(req, name) {
 }
 
 function isAuthenticated(req) {
-  return getCookie(req, SESSION_COOKIE) === sessionToken && sessionToken !== null;
+  return isValidSessionToken(getCookie(req, SESSION_COOKIE));
 }
 
 function gfTables() {
@@ -593,7 +629,7 @@ async function handleRequest(req, res) {
       return;
     }
 
-    sessionToken = crypto.randomBytes(24).toString("hex");
+    const sessionToken = createSessionToken();
     sendJson(res, 200, { authenticated: true }, {
       "Set-Cookie": `${SESSION_COOKIE}=${encodeURIComponent(sessionToken)}; Path=/; HttpOnly; SameSite=Lax${process.env.NODE_ENV === "production" ? "; Secure" : ""}`
     });
@@ -601,7 +637,6 @@ async function handleRequest(req, res) {
   }
 
   if (req.method === "POST" && pathname === "/api/logout") {
-    sessionToken = null;
     sendJson(res, 200, { authenticated: false }, {
       "Set-Cookie": `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV === "production" ? "; Secure" : ""}`
     });

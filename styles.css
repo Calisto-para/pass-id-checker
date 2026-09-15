@@ -372,7 +372,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   .client-page .result-actions .secure-label{align-self:flex-start}
 }
 
-/* Step 5: Foreign ID Card visual presentation */
+/* Step 5: National ID Card visual presentation */
 .admin-dashboard-page .issued-card.is-foreign-id {
   background: linear-gradient(145deg, #f7fafc 0%, #eef4f8 100%);
   border-color: #c5d4df;
@@ -380,7 +380,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   overflow: hidden;
 }
 .admin-dashboard-page .issued-card.is-foreign-id::before {
-  content: "FOREIGN ID CARD";
+  content: "NATIONAL ID CARD";
   display: block;
   margin: -18px -18px 16px;
   padding: 12px 18px;

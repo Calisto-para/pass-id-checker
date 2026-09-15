@@ -371,3 +371,41 @@ html, body { max-width: 100%; overflow-x: hidden; }
   .client-page .result-actions .btn-download{flex:1 1 100%;width:100%;min-width:0;padding-left:12px;padding-right:12px}
   .client-page .result-actions .secure-label{align-self:flex-start}
 }
+
+/* Step 5: Foreign ID Card visual presentation */
+.admin-dashboard-page .issued-card.is-foreign-id {
+  background: linear-gradient(145deg, #f7fafc 0%, #eef4f8 100%);
+  border-color: #c5d4df;
+  position: relative;
+  overflow: hidden;
+}
+.admin-dashboard-page .issued-card.is-foreign-id::before {
+  content: "FOREIGN ID CARD";
+  display: block;
+  margin: -18px -18px 16px;
+  padding: 12px 18px;
+  background: #173b55;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.admin-dashboard-page .issued-card.is-foreign-id .identity-person {
+  padding: 10px;
+  border: 1px solid #d4dfe7;
+  border-radius: 12px;
+  background: rgba(255,255,255,.78);
+}
+.admin-dashboard-page .issued-card.is-foreign-id .detail-grid.compact div {
+  background: rgba(255,255,255,.72);
+  border: 1px solid #dce5eb;
+  border-radius: 10px;
+}
+.admin-dashboard-page .issued-card.is-foreign-id .share-block {
+  background: rgba(255,255,255,.72);
+  border: 1px solid #dce5eb;
+}
+@media(max-width:620px){
+  .admin-dashboard-page .issued-card.is-foreign-id::before { margin: -13px -13px 13px; padding: 10px 13px; }
+}

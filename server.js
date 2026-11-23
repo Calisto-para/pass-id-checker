@@ -2,6 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const QRCode = require("qrcode");
 const { initDb, listRecords, findRecordById, upsertRecord, updateRecord, deleteRecord } = require("./db");
 
 const PORT = process.env.PORT || 3000;
@@ -776,15 +777,19 @@ async function handleRequest(req, res) {
     const host = req.headers.host;
     const verificationUrl = `${protocol}://${host}/?id=${encodeURIComponent(id)}`;
 
-    // Generate a standards-compliant QR code using a hosted QR renderer.
-    // The QR itself contains the complete verification URL, so scanning it
-    // opens this site's verification page immediately.
-    const qrServiceUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data=${encodeURIComponent(verificationUrl)}`;
-    res.writeHead(302, {
-      "Location": qrServiceUrl,
-      "Cache-Control": "public, max-age=300"
-    });
-    res.end();
+    // Render the QR here: the code encodes the complete verification URL, so
+    // scanning it opens this site's verification page, and no third-party
+    // renderer has to see the URL or be reachable for the image to show.
+    try {
+      const qr = await QRCode.toString(verificationUrl, { type: "svg", errorCorrectionLevel: "M", margin: 2, width: 240 });
+      res.writeHead(200, {
+        "Content-Type": "image/svg+xml; charset=utf-8",
+        "Cache-Control": "public, max-age=300"
+      });
+      res.end(qr);
+    } catch (error) {
+      sendJson(res, 500, { error: "Could not build the QR code" });
+    }
     return;
   }
 

@@ -21,7 +21,21 @@ let stream = null, detector = null, cameraLoop = null;
 const origin = window.location.origin;
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", { day:"2-digit", month:"2-digit", year:"numeric" });
-function normalizeId(value){ return String(value || "").trim().toUpperCase(); }
+// Printed like the document itself: record numbers as YYYYMMDD-NNNNN
+// (e.g. 19911031-01084) and passport numbers as two letters plus six digits
+// (e.g. FD022044). Anything that is not one of those shapes is kept as typed.
+function normalizeId(value){
+  const compact=String(value||"").trim().toUpperCase().replace(/\s+/g,"");
+  if(!compact) return "";
+  const record=compact.match(/^(\d{8})-?(\d{5})$/);
+  if(record) return `${record[1]}-${record[2]}`;
+  const passport=compact.match(/^([A-Z]{2})-?(\d{6})$/);
+  if(passport) return `${passport[1]}${passport[2]}`;
+  return compact;
+}
+// A saved record must carry one of the two printed document numbers above.
+const DOCUMENT_NUMBER_ERROR="Enter the document number as printed: two letters and six digits (e.g. FD022044) or a record number (e.g. 19911031-01084).";
+function isValidDocumentNumber(id){ return /^\d{8}-\d{5}$/.test(String(id||"")) || /^[A-Z]{2}\d{6}$/.test(String(id||"")); }
 function formatDate(value){ const d = new Date(value); return Number.isNaN(d.getTime()) ? String(value || "") : dateFormatter.format(d); }
 function escapeHtml(value){ return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -303,7 +317,7 @@ function updateDocumentTypeFields(){
   if(!els.documentType || !els.idNumber) return;
   const isForeignId = els.documentType.value === "National ID Card";
   if(els.documentNumberLabel) els.documentNumberLabel.textContent = isForeignId ? "ID card / document number" : "Passport number";
-  els.idNumber.placeholder = isForeignId ? "ID card or document number" : "Passport number";
+  els.idNumber.placeholder = isForeignId ? "e.g. 19911031-01084" : "e.g. FD022044 or 19911031-01084";
   if(els.identitySectionTitle) els.identitySectionTitle.textContent = isForeignId ? "National ID Card information" : "Identity information";
   if(els.identitySectionHelp) els.identitySectionHelp.textContent = isForeignId ? "Enter the details exactly as verified from the national ID card." : "Enter the details exactly as verified from the submitted document.";
 }
@@ -311,11 +325,14 @@ function updateDocumentTypeFields(){
 function renderAdminActions(){
   if(!isAdminPage && !isAdminDashboard) return;
   els.loginForm?.addEventListener("submit",login); els.logoutBtn?.addEventListener("click",logout); els.documentType?.addEventListener("change",updateDocumentTypeFields); updateDocumentTypeFields();
+  // Show the number in its printed document format as soon as the field is left.
+  els.idNumber?.addEventListener("blur",()=>{ els.idNumber.value=normalizeId(els.idNumber.value); });
   els.adminForm?.addEventListener("submit",async e=>{
     e.preventDefault(); if(!session.authenticated) return;
     const record={fullName:els.fullName.value.trim(),idNumber:normalizeId(els.idNumber.value),documentType:els.documentType.value.trim(),country:els.country.value.trim(),nationality:els.nationality.value.trim(),sex:els.sex.value.trim(),dob:els.dob.value,placeOfBirth:els.placeOfBirth.value.trim(),issueDate:els.issueDate.value,expiry:els.expiry.value,issuingAuthority:els.issuingAuthority.value.trim(),address:els.address.value.trim(),verificationNotes:els.verificationNotes.value.trim(),photoUrl:els.photoUrl.value.trim(),status:"Approved"};
     const requiredFields=["fullName","idNumber","documentType","country","nationality","sex","dob","placeOfBirth","issueDate","expiry","issuingAuthority","address"];
     if(requiredFields.some(field=>!record[field])){els.authNote.textContent="Please complete all required fields before saving.";return;}
+    if(!isValidDocumentNumber(record.idNumber)){els.authNote.textContent=DOCUMENT_NUMBER_ERROR;els.idNumber?.focus();return;}
     try{const saved=await saveRecord(record);editingRecordId=saved.idNumber;fillAdminForm(saved);els.authNote.textContent="Record saved successfully.";}catch(error){els.authNote.textContent=error.message;}
   });
   els.photoFile?.addEventListener("change",async e=>{

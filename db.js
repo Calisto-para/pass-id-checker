@@ -11,8 +11,17 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// Printed like the document itself: record numbers as YYYYMMDD-NNNNN
+// (e.g. 19911031-01084) and passport numbers as two letters plus six digits
+// (e.g. FD022044). Anything that is not one of those shapes is kept as typed.
 function normalizeId(value) {
-  return String(value || "").trim().toUpperCase();
+  const compact = String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+  if (!compact) return "";
+  const record = compact.match(/^(\d{8})-?(\d{5})$/);
+  if (record) return `${record[1]}-${record[2]}`;
+  const passport = compact.match(/^([A-Z]{2})-?(\d{6})$/);
+  if (passport) return `${passport[1]}${passport[2]}`;
+  return compact;
 }
 
 function normalizeRecord(record) {

@@ -73,8 +73,24 @@ function isValidSessionToken(token) {
   }
 }
 
+// Printed like the document itself: record numbers as YYYYMMDD-NNNNN
+// (e.g. 19911031-01084) and passport numbers as two letters plus six digits
+// (e.g. FD022044). Anything that is not one of those shapes is kept as typed.
 function normalizeId(value) {
-  return String(value || "").trim().toUpperCase();
+  const compact = String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+  if (!compact) return "";
+  const record = compact.match(/^(\d{8})-?(\d{5})$/);
+  if (record) return `${record[1]}-${record[2]}`;
+  const passport = compact.match(/^([A-Z]{2})-?(\d{6})$/);
+  if (passport) return `${passport[1]}${passport[2]}`;
+  return compact;
+}
+
+// A saved record must carry one of the two printed document numbers above.
+const DOCUMENT_NUMBER_ERROR = "Enter the document number as printed: two letters and six digits (e.g. FD022044) or a record number (e.g. 19911031-01084).";
+
+function isValidDocumentNumber(idNumber) {
+  return /^\d{8}-\d{5}$/.test(String(idNumber || "")) || /^[A-Z]{2}\d{6}$/.test(String(idNumber || ""));
 }
 
 function parseBody(req) {
@@ -665,6 +681,11 @@ async function handleRequest(req, res) {
       return;
     }
 
+    if (!isValidDocumentNumber(record.idNumber)) {
+      sendJson(res, 400, { error: DOCUMENT_NUMBER_ERROR });
+      return;
+    }
+
     const saved = await upsertRecord(record);
     const records = await listRecords();
     sendJson(res, 200, { record: saved, records });
@@ -689,6 +710,11 @@ async function handleRequest(req, res) {
     const record = createRecord(body);
     if (!validRecord(record)) {
       sendJson(res, 400, { error: "Missing required fields" });
+      return;
+    }
+
+    if (!isValidDocumentNumber(record.idNumber)) {
+      sendJson(res, 400, { error: DOCUMENT_NUMBER_ERROR });
       return;
     }
 
